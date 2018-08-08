@@ -1,0 +1,5 @@
+{:deps  {io.opentracing/opentracing-api  {:mvn/version "0.31.0"}
+         io.opentracing/opentracing-noop {:mvn/version "0.31.0"}
+         io.opentracing/opentracing-util {:mvn/version "0.31.0"}
+         ring                            {:mvn/version "1.6.3"}}
+ :paths ["src/clj" "resources"]}
