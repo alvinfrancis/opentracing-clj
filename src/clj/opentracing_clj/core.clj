@@ -9,53 +9,84 @@
                                        TextMapExtractAdapter
                                        TextMapInjectAdapter)))
 
-(def ^:dynamic ^Tracer *tracer* (GlobalTracer/get))
+(def ^:dynamic ^Tracer *tracer*
+  "An Tracer object representing the standard tracer for trace operations.
+
+  Defaults to the value returned by GlobalTracer.get().  Can be set with init!."
+  (GlobalTracer/get))
 
 ;; Span
 ;; ----
 
 (defn context
-  [^Span s]
-  (.context s))
+  "Returns the associated SpanContext of a span."
+  [^Span span]
+  (.context span))
 
 (defn finish
-  ([^Span s]
-   (.finish s))
-  ([^Span s ^long m]
-   (.finish s m)))
+  "Sets the end timestamp to now and records the span.  Can also supply an explicit timestamp in microseconds."
+  ([^Span span]
+   (.finish span))
+  ([^Span span ^long timestamp]
+   (.finish span timestamp)))
 
 (defn get-baggage-item
-  [^Span s ^String k]
-  (.getBaggageItem s k))
+  "Returns the value of the baggage item identified by the given key, or
+  nil if no such item could be found."
+  [^Span span ^String key]
+  (.getBaggageItem span key))
 
 (defn log-event
-  ([^Span s ^String event]
-   (.log s event))
-  ([^Span s ^String event ^Long ts]
-   (.log s ts event)))
+  "Logs a string event on the span.  Can also supply an explicit timestamp in microseconds.
+
+  Returns the span for chaining."
+  ([^Span span ^String event]
+   (.log span event))
+  ([^Span span ^String event ^Long timestamp]
+   (.log span timestamp event)))
 
 (defn log-map
-  ([^Span s m]
-   (.log s ^java.util.Map (walk/stringify-keys m)))
-  ([^Span s m ^Long ts]
-   (.log s ts ^java.util.Map (walk/stringify-keys m))))
+  "Logs a map on the span.  Can also supply an explicit timestamp in microseconds.
+
+  Note: Will automatically convert keys into strings."
+  ([^Span span map]
+   (.log span ^java.util.Map (walk/stringify-keys map)))
+  ([^Span span map ^Long timestamp]
+   (.log span timestamp ^java.util.Map (walk/stringify-keys map))))
 
 (defn set-baggage-item
-  [^Span s ^String k ^String v]
-  (.setBaggageItem s k v))
+  "Sets a baggage item on the Span as a key/value pair."
+  [^Span span ^String key ^String val]
+  (.setBaggageItem span key val))
+
+(defn set-baggage-items
+  "Sets baggage items on the Span using key/value pairs of a map.
+
+  Note: Will automatically convert keys into strings."
+  [^Span span map]
+  (when (map? map)
+    (let [sm (walk/stringify-keys map)]
+      (doseq [[k v] sm]
+        (set-baggage-item span k v))))
+  span)
 
 (defn set-operation-name
-  [^Span s ^String op]
-  (.setOperationName s op))
+  "Sets the string name for the logical operation this span represents."
+  [^Span span ^String name]
+  (.setOperationName span name))
 
 (defn set-tag
-  [^Span s ^String k v]
+  "Sets a key/value tag on the Span."
+  [^Span span ^String key value]
   (cond
-    (instance? Boolean v) (.setTag s k ^Boolean v)
-    (instance? Number v)  (.setTag s k ^Number v)
-    :else                 (.setTag s k ^String (str v))))
+    (instance? Boolean value) (.setTag s key ^Boolean value)
+    (instance? Number value)  (.setTag s key ^Number value)
+    :else                     (.setTag s key ^String (str value))))
 
 (defn set-tags
+  "Sets tags on the Span using key/value pairs of a map.
+
+  Note: Will automatically convert keys into strings."
   [^Span s m]
   (when (map? m)
     (let [sm (walk/stringify-keys m)]
@@ -64,11 +95,15 @@
   s)
 
 (defn active-span
+  "Returns the current active span."
   []
   (when *tracer*
     (.activeSpan *tracer*)))
 
 (defmacro with-span
+  "bindings => [name data]
+
+  Evaluates body in the scope of a generated span."
   [bindings & body]
   (let [s (bindings 0)
         m (bindings 1)]
@@ -96,19 +131,28 @@
               :text Format$Builtin/TEXT_MAP})
 
 (defn inject
-  [^SpanContext ctx fmt]
-  (when-let [t *tracer*]
-    (let [hm (java.util.HashMap.)
-          tm (TextMapInjectAdapter. hm)]
-      (.inject t ctx (get formats fmt) tm)
-      (into {} hm))))
+  "Returns a map of the SpanContext in the specified carrier format for
+  the purpose of propagation across process boundaries.
+
+  Defaults to active span context."
+  ([format]
+   (when-let [s (active-span)]
+     (inject (context s) format)))
+  ([^SpanContext ctx format]
+   (when-let [t *tracer*]
+     (let [hm (java.util.HashMap.)
+           tm (TextMapInjectAdapter. hm)]
+       (.inject t ctx (get formats format) tm)
+       (into {} hm)))))
 
 (defn extract
-  [^java.util.Map header fmt]
+  "Extract a SpanContext from a carrier of a given type, presumably
+  after propagation across a process boundary."
+  [^java.util.Map carrier format]
   (when-let [t *tracer*]
-    (let [hm (java.util.HashMap. header)
+    (let [hm (java.util.HashMap. carrier)
           tm (TextMapExtractAdapter. hm)]
-      (.extract t (get formats fmt) tm))))
+      (.extract t (get formats format) tm))))
 
 ;; Utils
 ;; -----
@@ -127,6 +171,14 @@
   (str (string/upper-case (name request-method)) " " uri))
 
 (defn wrap-opentracing
+  "Middleware for instrumenting a ring handler with tracing.  Handles
+  HTTP header context propagation.
+
+  Adds a ::span field to the ring request for use downstream.
+
+  op-name-fn       = (f ring-request)  => op-name
+  request-tags-fn  = (f ring-request)  => request-tags
+  response-tags-fn = (f ring-response) => response-tags"
   ([handler]
    (wrap-opentracing handler default-op-name))
   ([handler op-name-fn]
@@ -144,5 +196,6 @@
            response))))))
 
 (defn init!
+  "Initializes the root binding of *tracer* to the given tracer."
   ([^Tracer tracer]
    (alter-var-root #'*tracer* (constantly tracer))))
