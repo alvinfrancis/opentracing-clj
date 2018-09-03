@@ -79,9 +79,9 @@
   "Sets a key/value tag on the Span."
   [^Span span ^String key value]
   (cond
-    (instance? Boolean value) (.setTag s key ^Boolean value)
-    (instance? Number value)  (.setTag s key ^Number value)
-    :else                     (.setTag s key ^String (str value))))
+    (instance? Boolean value) (.setTag span key ^Boolean value)
+    (instance? Number value)  (.setTag span key ^Number value)
+    :else                     (.setTag span key ^String (str value))))
 
 (defn set-tags
   "Sets tags on the Span using key/value pairs of a map.
