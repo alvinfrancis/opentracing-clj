@@ -127,7 +127,7 @@
 (s/def :opentracing/span-binding
   (s/spec
    (s/cat :span-sym simple-symbol?
-          :span-spec :opentracing/span-init)))
+          :span-spec any?)))
 
 (defmacro with-span
   "bindings => [name data]
