@@ -114,7 +114,6 @@
 (s/def :opentracing.span-init/timestamp :opentracing/microseconds-since-epoch)
 (s/def :opentracing.span-init/child-of (s/or :opentracing/span
                                              :opentracing/span-context))
-(s/def :opentracing.span-init/scoped? boolean?)
 (s/def :opentracing.span-init/finish? boolean?)
 
 (s/def :opentracing/span-init
@@ -123,7 +122,6 @@
                    :opentracing.span-init/ignore-active?
                    :opentracing.span-init/timestamp
                    :opentracing.span-init/child-of
-                   :opentracing.span-init/scoped?
                    :opentracing.span-init/finish?]))
 
 (s/def :opentracing/span-binding
@@ -147,11 +145,8 @@
          (sb/with-start-timestamp sb# start-ts#))
        (when-let [parent# ~(:child-of m)]
          (sb/child-of sb# parent#))
-       (with-open [^Scope scope# (if (or (nil? ~(:scoped? m))
-                                         ~(:scoped? m))
-                                   (sb/start sb# (or (nil? ~(:finish? m))
-                                                     ~(:finish? m)))
-                                   (.start sb#))]
+       (with-open [^Scope scope# (sb/start sb# (or (nil? ~(:finish? m))
+                                                   ~(:finish? m)))]
          (let [~s (.span scope#)]
            ~@body)))))
 
