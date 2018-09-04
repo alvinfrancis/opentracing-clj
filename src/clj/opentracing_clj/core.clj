@@ -136,7 +136,7 @@
   [bindings & body]
   (let [s (bindings 0)
         m (bindings 1)]
-    `(let [sb# (sb/buildSpan *tracer* ~(:name m))]
+    `(let [sb# (sb/build-span *tracer* ~(:name m))]
        (when-let [tags# ~(:tags m)]
          (sb/add-tags sb# tags#))
        (when ~(:ignore-active? m)
