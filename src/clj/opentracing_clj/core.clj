@@ -203,7 +203,8 @@
 (defn ^:private fn-var?
   [v]
   (let [f @v]
-    (or (contains? (meta v) :arglists)
+    (or (and (-> v meta contains? :arglists)
+             (-> v meta :macro not))
         (fn? f)
         (instance? clojure.lang.MultiFn f))))
 
