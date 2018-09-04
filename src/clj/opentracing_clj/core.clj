@@ -5,7 +5,7 @@
    [clojure.walk :as walk]
    [opentracing-clj.span-builder :as sb]
    [ring.util.request])
-  (:import (io.opentracing Span SpanContext Tracer Scope Tracer$SpanBuilder)
+  (:import (io.opentracing Span SpanContext Tracer Scope)
            (io.opentracing.util GlobalTracer)
            (io.opentracing.propagation Format$Builtin
                                        TextMapExtractAdapter
@@ -138,19 +138,19 @@
   [bindings & body]
   (let [s (bindings 0)
         m (bindings 1)]
-    `(let [sb# (.buildSpan *tracer* ~(:name m))]
+    `(let [sb# (sb/buildSpan *tracer* ~(:name m))]
        (when-let [tags# ~(:tags m)]
          (sb/add-tags sb# tags#))
        (when ~(:ignore-active? m)
-         (.ignoreActiveSpan sb#))
+         (sb/ignore-active sb#))
        (when-let [start-ts# ~(:start-timestamp m)]
-         (.withStartTimestamp sb# start-ts#))
+         (sb/with-start-timestamp sb# start-ts#))
        (when-let [parent# ~(:child-of m)]
          (sb/child-of sb# parent#))
        (with-open [^Scope scope# (if (or (nil? ~(:scoped? m))
                                          ~(:scoped? m))
-                                   (.startActive sb# (or (nil? ~(:finish? m))
-                                                         ~(:finish? m)))
+                                   (sb/start sb# (or (nil? ~(:finish? m))
+                                                     ~(:finish? m)))
                                    (.start sb#))]
          (let [~s (.span scope#)]
            ~@body)))))

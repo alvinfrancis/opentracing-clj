@@ -1,6 +1,6 @@
 (ns opentracing-clj.span-builder
   (:require [clojure.walk :as walk])
-  (:import (io.opentracing Span SpanContext Tracer$SpanBuilder)))
+  (:import (io.opentracing Span SpanContext Tracer Tracer$SpanBuilder)))
 
 (defn add-reference
   [^Tracer$SpanBuilder sb ^String type ^SpanContext ctx]
@@ -34,3 +34,17 @@
 (defmethod child-of SpanContext
   [^Tracer$SpanBuilder sb ^SpanContext parent]
   (.asChildOf sb parent))
+
+(defn with-start-timestamp
+  [^Tracer$SpanBuilder sb timestamp]
+  (.withStartTimestamp sb timestamp))
+
+(defn start
+  ([^Tracer$SpanBuilder sb]
+   (start sb true))
+  ([^Tracer$SpanBuilder sb finish-on-close?]
+   (.startActive sb finish-on-close?)))
+
+(defn build-span
+  [^Tracer tracer ^String n]
+  (.buildSpan tracer n))
