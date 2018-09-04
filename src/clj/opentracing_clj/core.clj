@@ -1,8 +1,10 @@
 (ns opentracing-clj.core
-  (:require [clojure.string :as string]
-            [clojure.walk :as walk]
-            [opentracing-clj.span-builder :as sb]
-            [ring.util.request])
+  (:require
+   [clojure.spec.alpha :as s]
+   [clojure.string :as string]
+   [clojure.walk :as walk]
+   [opentracing-clj.span-builder :as sb]
+   [ring.util.request])
   (:import (io.opentracing Span SpanContext Tracer Scope Tracer$SpanBuilder)
            (io.opentracing.util GlobalTracer)
            (io.opentracing.propagation Format$Builtin
@@ -100,6 +102,35 @@
   (when *tracer*
     (.activeSpan *tracer*)))
 
+;; with-span
+;; ---------
+
+(s/def :opentracing/microseconds-since-epoch int?)
+(s/def :opentracing/span #(instance? Span %))
+(s/def :opentracing/span-context #(instance? SpanContext %))
+(s/def :opentracing.span-init/name string?)
+(s/def :opentracing.span-init/tags map?)
+(s/def :opentracing.span-init/ignore-active? boolean?)
+(s/def :opentracing.span-init/timestamp :opentracing/microseconds-since-epoch)
+(s/def :opentracing.span-init/child-of (s/or :opentracing/span
+                                             :opentracing/span-context))
+(s/def :opentracing.span-init/scoped? boolean?)
+(s/def :opentracing.span-init/finish? boolean?)
+
+(s/def :opentracing/span-init
+  (s/keys :req-un [:opentracing.span-init/name]
+          :opt-un [:opentracing.span-init/tags
+                   :opentracing.span-init/ignore-active?
+                   :opentracing.span-init/timestamp
+                   :opentracing.span-init/child-of
+                   :opentracing.span-init/scoped?
+                   :opentracing.span-init/finish?]))
+
+(s/def :opentracing/span-binding
+  (s/spec
+   (s/cat :span-sym simple-symbol?
+          :span-spec :opentracing/span-init)))
+
 (defmacro with-span
   "bindings => [name data]
 
@@ -123,6 +154,10 @@
                                    (.start sb#))]
          (let [~s (.span scope#)]
            ~@body)))))
+
+(s/fdef with-span
+  :args (s/cat :binding :opentracing/span-binding
+               :body    (s/* any?)))
 
 ;; Propagation
 ;; -----------
