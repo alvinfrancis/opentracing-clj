@@ -125,25 +125,32 @@
           :span-spec any?)))
 
 (defmacro with-span
-  "bindings => [name data]
+  "Evaluates body in the scope of a generated span.
 
-  Evaluates body in the scope of a generated span."
+  binding => [span-sym span-init-spec]
+
+  span-init-spec must evaluate at runtime to a value conforming to
+  the :opentracing/span-init spec."
   [bindings & body]
   (let [s (bindings 0)
         m (bindings 1)]
-    `(let [sb# (sb/build-span *tracer* ~(:name m))]
-       (when-let [tags# ~(:tags m)]
-         (sb/add-tags sb# tags#))
-       (when ~(:ignore-active? m)
-         (sb/ignore-active sb#))
-       (when-let [start-ts# ~(:start-timestamp m)]
-         (sb/with-start-timestamp sb# start-ts#))
-       (when-let [parent# ~(:child-of m)]
-         (sb/child-of sb# parent#))
-       (with-open [^Scope scope# (sb/start sb# (or (nil? ~(:finish? m))
-                                                   ~(:finish? m)))]
-         (let [~s (.span scope#)]
-           ~@body)))))
+    `(let [m# ~m]
+       (if (s/valid? :opentracing/span-init m#)
+         (let [sb# (sb/build-span *tracer* (:name m#))]
+           (when-let [tags# (:tags m#)]
+             (sb/add-tags sb# tags#))
+           (when (:ignore-active? m#)
+             (sb/ignore-active sb#))
+           (when-let [start-ts# (:start-timestamp m#)]
+             (sb/with-start-timestamp sb# start-ts#))
+           (when-let [parent# (:child-of m#)]
+             (sb/child-of sb# parent#))
+           (with-open [^Scope scope# (sb/start sb# (or (nil? (:finish? m#))
+                                                       (:finish? m#)))]
+             (let [~s (.span scope#)]
+               ~@body)))
+         (throw (ex-info "with-span binding failed to conform to :opentracing/span-init"
+                         (s/explain-data :opentracing/span-init m#)))))))
 
 (s/fdef with-span
   :args (s/cat :binding :opentracing/span-binding
