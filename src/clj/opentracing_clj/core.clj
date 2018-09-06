@@ -38,23 +38,18 @@
   [^Span span ^String key]
   (.getBaggageItem span key))
 
-(defn log-event
-  "Logs a string event on the span.  Can also supply an explicit timestamp in microseconds.
+(defn log
+  "Logs value v on the span.
 
-  Returns the span for chaining."
-  ([^Span span ^String event]
-   (.log span event))
-  ([^Span span ^String event ^Long timestamp]
-   (.log span timestamp event)))
-
-(defn log-map
-  "Logs a map on the span.  Can also supply an explicit timestamp in microseconds.
-
-  Note: Will automatically convert keys into strings."
-  ([^Span span map]
-   (.log span ^java.util.Map (walk/stringify-keys map)))
-  ([^Span span map ^Long timestamp]
-   (.log span timestamp ^java.util.Map (walk/stringify-keys map))))
+  Can also supply an explicit timestamp in microseconds."
+  ([^Span span v]
+   (cond
+     (map? v) (.log span ^java.util.Map (walk/stringify-keys v))
+     :else    (.log span ^String (str v))))
+  ([^Span span v ^Long timestamp]
+   (cond
+     (map? v) (.log span timestamp ^java.util.Map (walk/stringify-keys v))
+     :else    (.log span timestamp ^String (str v)))))
 
 (defn set-baggage-item
   "Sets a baggage item on the Span as a key/value pair."
