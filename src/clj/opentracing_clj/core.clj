@@ -107,8 +107,9 @@
 (s/def :opentracing.span-init/tags map?)
 (s/def :opentracing.span-init/ignore-active? boolean?)
 (s/def :opentracing.span-init/timestamp :opentracing/microseconds-since-epoch)
-(s/def :opentracing.span-init/child-of (s/or :opentracing/span
-                                             :opentracing/span-context))
+(s/def :opentracing.span-init/child-of (s/nilable
+                                        (s/or :opentracing/span
+                                              :opentracing/span-context)))
 (s/def :opentracing.span-init/finish? boolean?)
 
 (s/def :opentracing/span-init
