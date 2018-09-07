@@ -1,11 +1,16 @@
 # opentracing-clj
 [![CircleCI](https://circleci.com/gh/alvinfrancis/opentracing-clj.svg?style=svg)](https://circleci.com/gh/alvinfrancis/opentracing-clj)
 
-Opentracing API support for Clojure built on top of [opentracing-java](https://github.com/opentracing/opentracing-java).
+Opentracing API support for Clojure built on top of
+[opentracing-java](https://github.com/opentracing/opentracing-java).
 
 ## Usage
 
-```
+### Creating Spans
+
+The provided `with-span` macro allows for creation of spans.
+
+``` clojure
 (require '[opentracing-clj.core :as tracing])
 
 (tracing/with-span [s {:name "span-name"
@@ -13,6 +18,11 @@ Opentracing API support for Clojure built on top of [opentracing-java](https://g
                               :span.kind :server}}]
   ...)
 ```
+
+### Tracer
+
+The tracer used by opentracing-clj defaults to the value returned by
+`io.opentracing.util.GlobalTracer.get()`
 
 ## License
 
