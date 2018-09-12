@@ -10,4 +10,5 @@
                  [io.opentracing/opentracing-noop "0.31.0"]
                  [io.opentracing/opentracing-util "0.31.0"]
                  [ring "1.6.3"]]
-  :profiles {:test {:dependencies [[io.opentracing/opentracing-mock "0.31.0"]]}})
+  :profiles {:test {:dependencies [[io.opentracing/opentracing-mock "0.31.0"]
+                                   [ring/ring-mock "0.3.2"]]}})
