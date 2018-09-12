@@ -6,10 +6,7 @@
    [opentracing-clj.span-builder :as sb]
    [ring.util.request])
   (:import (io.opentracing Span SpanContext Tracer Scope)
-           (io.opentracing.util GlobalTracer)
-           (io.opentracing.propagation Format$Builtin
-                                       TextMapExtractAdapter
-                                       TextMapInjectAdapter)))
+           (io.opentracing.util GlobalTracer)))
 
 (def ^:dynamic ^Tracer *tracer*
   "An Tracer object representing the standard tracer for trace operations.
@@ -156,37 +153,6 @@
 (s/fdef with-span
   :args (s/cat :binding :opentracing/span-binding
                :body    (s/* any?)))
-
-;; Propagation
-;; -----------
-
-(def formats {:http Format$Builtin/HTTP_HEADERS
-              :text Format$Builtin/TEXT_MAP})
-
-(defn inject
-  "Returns a map of the SpanContext in the specified carrier format for
-  the purpose of propagation across process boundaries.
-
-  Defaults to active span context."
-  ([format]
-   (when-let [s (active-span)]
-     (inject (context s) format)))
-  ([^SpanContext ctx format]
-   (when-let [t *tracer*]
-     (let [hm (java.util.HashMap.)
-           tm (TextMapInjectAdapter. hm)]
-       (.inject t ctx (get formats format) tm)
-       (into {} hm)))))
-
-(defn extract
-  "Extract a SpanContext from a carrier of a given type, presumably
-  after propagation across a process boundary."
-  [^java.util.Map carrier format]
-  (when-let [t *tracer*]
-    (let [hm (java.util.HashMap. carrier)
-          tm (TextMapExtractAdapter. hm)]
-      (.extract t (get formats format) tm))))
-
 
 ;; Instrumentation
 ;; ---------------
