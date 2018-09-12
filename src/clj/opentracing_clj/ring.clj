@@ -1,7 +1,9 @@
 (ns opentracing-clj.ring
   (:require
    [clojure.string :as string]
-   [opentracing-clj.core :as tracing]))
+   [opentracing-clj.core :as tracing]
+   [opentracing-clj.propagation :as propagation]
+   [ring.util.request]))
 
 (defn default-request-tags
   [{:keys [request-method] :as request}]
@@ -33,7 +35,7 @@
    (wrap-opentracing handler op-name-fn request-tags-fn default-response-tags))
   ([handler op-name-fn request-tags-fn response-tags-fn]
    (fn [request]
-     (let [ctx (tracing/extract (:headers request) :http)]
+     (let [ctx (propagation/extract (:headers request) :http)]
        (tracing/with-span [s {:name     (op-name-fn request)
                               :child-of ctx
                               :tags     (request-tags-fn request)}]
