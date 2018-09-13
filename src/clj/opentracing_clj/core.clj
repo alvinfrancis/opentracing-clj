@@ -17,13 +17,32 @@
 ;; Span
 ;; ----
 
+(defn active-span
+  "Returns the current active span."
+  []
+  (when *tracer*
+    (.activeSpan *tracer*)))
+
+(defmacro with-active-span
+  "Convenience macro for setting sym to the current active span.  Will
+  evaluate to nil if there are no active-spans."
+  [sym & body]
+  `(when-let [~sym (active-span)]
+     ~@body))
+
 (defn context
   "Returns the associated SpanContext of a span."
-  [^Span span]
-  (.context span))
+  ([]
+   (with-active-span s
+     (context s)))
+  ([^Span span]
+   (.context span)))
 
 (defn finish
   "Sets the end timestamp to now and records the span.  Can also supply an explicit timestamp in microseconds."
+  ([]
+   (with-active-span s
+     (finish s)))
   ([^Span span]
    (.finish span))
   ([^Span span ^long timestamp]
@@ -32,13 +51,19 @@
 (defn get-baggage-item
   "Returns the value of the baggage item identified by the given key, or
   nil if no such item could be found."
-  [^Span span ^String key]
-  (.getBaggageItem span key))
+  ([^String key]
+   (with-active-span s
+     (get-baggage-item s key)))
+  ([^Span span ^String key]
+   (.getBaggageItem span key)))
 
 (defn log
   "Logs value v on the span.
 
   Can also supply an explicit timestamp in microseconds."
+  ([v]
+   (with-active-span s
+     (log s v)))
   ([^Span span v]
    (cond
      (map? v) (.log span ^java.util.Map (walk/stringify-keys v))
@@ -50,49 +75,58 @@
 
 (defn set-baggage-item
   "Sets a baggage item on the Span as a key/value pair."
-  [^Span span ^String key ^String val]
-  (.setBaggageItem span key val))
+  ([^String key ^String val]
+   (with-active-span s
+     (set-baggage-item s key val)))
+  ([^Span span ^String key ^String val]
+   (.setBaggageItem span key val)))
 
 (defn set-baggage-items
   "Sets baggage items on the Span using key/value pairs of a map.
 
   Note: Will automatically convert keys into strings."
-  [^Span span map]
-  (when (map? map)
-    (let [sm (walk/stringify-keys map)]
-      (doseq [[k v] sm]
-        (set-baggage-item span k v))))
-  span)
+  ([map]
+   (with-active-span s
+     (set-baggage-items s map)))
+  ([^Span span map]
+   (when (map? map)
+     (let [sm (walk/stringify-keys map)]
+       (doseq [[k v] sm]
+         (set-baggage-item span k v))))
+   span))
 
 (defn set-operation-name
   "Sets the string name for the logical operation this span represents."
-  [^Span span ^String name]
-  (.setOperationName span name))
+  ([^String name]
+   (with-active-span s
+     (set-operation-name s name)))
+  ([^Span span ^String name]
+   (.setOperationName span name)))
 
 (defn set-tag
   "Sets a key/value tag on the Span."
-  [^Span span ^String key value]
-  (cond
-    (instance? Boolean value) (.setTag span key ^Boolean value)
-    (instance? Number value)  (.setTag span key ^Number value)
-    :else                     (.setTag span key ^String (str value))))
+  ([^String key value]
+   (with-active-span s
+     (set-tag s key value)))
+  ([^Span span ^String key value]
+   (cond
+     (instance? Boolean value) (.setTag span key ^Boolean value)
+     (instance? Number value)  (.setTag span key ^Number value)
+     :else                     (.setTag span key ^String (str value)))))
 
 (defn set-tags
   "Sets tags on the Span using key/value pairs of a map.
 
   Note: Will automatically convert keys into strings."
-  [^Span s m]
-  (when (map? m)
-    (let [sm (walk/stringify-keys m)]
-      (doseq [[k v] sm]
-        (set-tag s k v))))
-  s)
-
-(defn active-span
-  "Returns the current active span."
-  []
-  (when *tracer*
-    (.activeSpan *tracer*)))
+  ([m]
+   (with-active-span s
+     (set-tags s m)))
+  ([^Span s m]
+   (when (map? m)
+     (let [sm (walk/stringify-keys m)]
+       (doseq [[k v] sm]
+         (set-tag s k v))))
+   s))
 
 ;; with-span
 ;; ---------
