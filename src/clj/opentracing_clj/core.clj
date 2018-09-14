@@ -255,12 +255,3 @@
         (when (= wrapped current)
           (alter-var-root v (constantly raw))
           (->sym v))))))
-
-
-;; Init
-;; ----
-
-(defn init!
-  "Initializes the root binding of *tracer* to the given tracer."
-  ([^Tracer tracer]
-   (alter-var-root #'*tracer* (constantly tracer))))
