@@ -42,11 +42,11 @@
             (is (= "span-2" (.operationName (nth spans 1)))))))
 
       (testing "timestamp"
+        (.reset *tracer*)
         (finish (.span scope-1) 10)
-        (let [spans (.finishedSpans *tracer*)]
-          (is (= 3 (count spans)))
-          (is (= "span-1" (.operationName (nth spans 2))))
-          (is (= 10 (.finishMicros (nth spans 2)))))))
+        (let [span (first (.finishedSpans *tracer*))]
+          (is (= "span-1" (.operationName span)))
+          (is (= 10 (.finishMicros span))))))
 
     (testing "no active span"
       (is (thrown? IllegalStateException (finish))))))
@@ -58,7 +58,7 @@
         (log "test")
         (log {:key "value"})
         (log (.span scope) 1))
-      (let [span (nth (.finishedSpans *tracer*) 0)]
+      (let [span (first (.finishedSpans *tracer*))]
         (is (< 0 (count (.logEntries span))))
         (let [entry (nth (.logEntries span) 0)]
           (is (= "test" (get (.fields entry) "event"))))
@@ -68,10 +68,11 @@
           (is (= "1" (get (.fields entry) "event"))))))
 
     (testing "with timestamp"
+      (.reset *tracer*)
       (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
         (let [span (.span scope)]
           (log span :not-string 10)))
-      (let [span (nth (.finishedSpans *tracer*) 1)]
+      (let [span (first (.finishedSpans *tracer*))]
         (is (< 0 (count (.logEntries span))))
         (let [entry (nth (.logEntries span) 0)]
           (is (= ":not-string" (get (.fields entry) "event"))))))
@@ -202,18 +203,15 @@
       (let [span-name "test-1"]
         (with-span [s {:name span-name}]
           (+ 1 1))
-        (let [spans (.finishedSpans *tracer*)]
-          (is (= (.operationName (nth spans 0)) span-name)))))
+        (is (= span-name (.operationName (first (.finishedSpans *tracer*)))))
+        (is (= 1 (count (.finishedSpans *tracer*))))))
 
     (testing "set span tags"
+      (.reset *tracer*)
       (let [span-name "test-2"
             span-tags {:component "test-component"}]
         (with-span [s {:name span-name
                        :tags span-tags}]
           (+ 1 1))
-        (let [spans (.finishedSpans *tracer*)]
-          (is (= (.tags (nth spans 1))
-                 (walk/stringify-keys span-tags))))))
-
-    (testing "tracer span record count"
-      (is (= (count (.finishedSpans *tracer*)) 2)))))
+        (is (= (.tags (first (.finishedSpans *tracer*)))
+               (walk/stringify-keys span-tags)))))))
