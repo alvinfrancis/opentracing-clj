@@ -20,9 +20,9 @@
 (defn add-tags
   [^Tracer$SpanBuilder sb m]
   (when (map? m)
-    (let [sm (walk/stringify-keys m)]
-      (doseq [[k v] sm]
-        (add-tag sb k v))))
+    (doseq [[k v] m]
+      (add-tag sb (if (keyword? k) (name k) (str k))
+               v)))
   sb)
 
 (defmulti child-of (fn [sb parent] (class parent)))
