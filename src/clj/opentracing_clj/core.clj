@@ -48,12 +48,12 @@
   ([^Span span ^long timestamp]
    (.finish span timestamp)))
 
-(defn get-baggage-item
+(defn baggage-item
   "Returns the value of the baggage item identified by the given key, or
   nil if no such item could be found."
   ([^String key]
    (with-active-span s
-     (get-baggage-item s key)))
+     (baggage-item s key)))
   ([^Span span ^String key]
    (.getBaggageItem span key)))
 
