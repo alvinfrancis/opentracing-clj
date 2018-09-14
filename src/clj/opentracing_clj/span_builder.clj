@@ -40,8 +40,6 @@
   (.withStartTimestamp sb timestamp))
 
 (defn start
-  ([^Tracer$SpanBuilder sb]
-   (start sb true))
   ([^Tracer$SpanBuilder sb finish-on-close?]
    (.startActive sb finish-on-close?)))
 
