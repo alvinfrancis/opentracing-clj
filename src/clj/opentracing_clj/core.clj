@@ -90,9 +90,10 @@
      (set-baggage-items s map)))
   ([^Span span map]
    (when (map? map)
-     (let [sm (walk/stringify-keys map)]
-       (doseq [[k v] sm]
-         (set-baggage-item span k v))))
+     (doseq [[k v] map]
+       (set-baggage-item span
+                         (if (keyword? k) (name k) (str k))
+                         (str v))))
    span))
 
 (defn set-operation-name
@@ -123,9 +124,10 @@
      (set-tags s m)))
   ([^Span s m]
    (when (map? m)
-     (let [sm (walk/stringify-keys m)]
-       (doseq [[k v] sm]
-         (set-tag s k v))))
+     (doseq [[k v] m]
+       (set-tag s
+                (if (keyword? k) (name k) (str k))
+                v)))
    s))
 
 ;; with-span
