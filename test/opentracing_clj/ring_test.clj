@@ -5,16 +5,12 @@
    [ring.mock.request :as mock]
    [opentracing-clj.core :as tracing]
    [opentracing-clj.propagation :as propagation]
-   [opentracing-clj.ring :refer :all])
+   [opentracing-clj.ring :refer :all]
+   [opentracing-clj.test-utils :as utils])
   (:import
    [io.opentracing.mock MockTracer]))
 
-(defn with-mock-tracer
-  [f]
-  (binding [tracing/*tracer* (new MockTracer)]
-    (f)))
-
-(use-fixtures :each with-mock-tracer)
+(use-fixtures :each utils/with-mock-tracer)
 
 (defn mock-handler
   [r]

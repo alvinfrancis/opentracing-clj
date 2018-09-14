@@ -1,15 +1,11 @@
 (ns opentracing-clj.core-test
   (:require [clojure.test :refer :all]
             [clojure.walk :as walk]
-            [opentracing-clj.core :refer :all])
+            [opentracing-clj.core :refer :all]
+            [opentracing-clj.test-utils :as utils])
   (:import [io.opentracing.mock MockSpan MockTracer]))
 
-(defn with-mock-tracer
-  [f]
-  (binding [*tracer* (new MockTracer)]
-    (f)))
-
-(use-fixtures :each with-mock-tracer)
+(use-fixtures :each utils/with-mock-tracer)
 
 (deftest active-span-test
   (testing "active span"
