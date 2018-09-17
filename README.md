@@ -1,5 +1,4 @@
-# opentracing-clj
-[![CircleCI](https://circleci.com/gh/alvinfrancis/opentracing-clj.svg?style=svg)](https://circleci.com/gh/alvinfrancis/opentracing-clj)
+# opentracing-clj [![CircleCI](https://circleci.com/gh/alvinfrancis/opentracing-clj.svg?style=svg)](https://circleci.com/gh/alvinfrancis/opentracing-clj)
 
 Opentracing API support for Clojure built on top of
 [opentracing-java](https://github.com/opentracing/opentracing-java).
