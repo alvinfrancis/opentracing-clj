@@ -1,4 +1,5 @@
 (ns opentracing-clj.ring
+  "Ring middleware for opentracing."
   (:require
    [clojure.string :as string]
    [opentracing-clj.core :as tracing]

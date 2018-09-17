@@ -1,4 +1,5 @@
 (ns opentracing-clj.core
+  "Functions for creating and manipulating spans for opentracing."
   (:require
    [clojure.spec.alpha :as s]
    [clojure.string :as string]

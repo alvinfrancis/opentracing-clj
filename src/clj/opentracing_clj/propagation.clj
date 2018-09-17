@@ -1,4 +1,5 @@
 (ns opentracing-clj.propagation
+  "Functions for cross-process propagation of span contexts."
   (:require [opentracing-clj.core :as tracing])
   (:import (io.opentracing SpanContext)
            (io.opentracing.propagation Format$Builtin
