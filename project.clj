@@ -13,6 +13,6 @@
                  [ring "1.6.3"]]
   :codox {:output-path "codox"
           :metadata    {:doc/format :markdown}
-          :source-uri  "https://github.com/alvinfrancis/opentracing-clj/blob/{version}/{filepath}#L{line}"}
+          :source-uri  "https://github.com/alvinfrancis/opentracing-clj/blob/v{version}/{filepath}#L{line}"}
   :profiles {:test {:dependencies [[io.opentracing/opentracing-mock "0.31.0"]
                                    [ring/ring-mock "0.3.2"]]}})
