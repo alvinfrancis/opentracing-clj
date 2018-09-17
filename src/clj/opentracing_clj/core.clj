@@ -11,7 +11,7 @@
 (def ^:dynamic ^Tracer *tracer*
   "An Tracer object representing the standard tracer for trace operations.
 
-  Defaults to the value returned by GlobalTracer.get().  Can be set with init!."
+  Defaults to the value returned by GlobalTracer.get()."
   (GlobalTracer/get))
 
 ;; Span
@@ -116,9 +116,9 @@
      :else                     (.setTag span key ^String (str value)))))
 
 (defn set-tags
-  "Sets tags on the Span using key/value pairs of a map.
+  "Sets/adds tags on the Span using key/value pairs of a map.
 
-  Note: Will automatically convert keys into strings."
+  Automatically converts keys into strings.  Overrides any existing tags with the same keys."
   ([m]
    (with-active-span s
      (set-tags s m)))
