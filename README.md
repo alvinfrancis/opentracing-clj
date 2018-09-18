@@ -1,4 +1,4 @@
-# opentracing-clj [![Build Status](https://travis-ci.org/alvinfrancis/opentracing-clj.svg?branch=master)](https://travis-ci.org/alvinfrancis/opentracing-clj)
+# opentracing-clj [![Build Status](https://travis-ci.org/alvinfrancis/opentracing-clj.svg?branch=master)](https://travis-ci.org/alvinfrancis/opentracing-clj) [![Clojars Project](https://img.shields.io/clojars/v/opentracing-clj.svg)](https://clojars.org/opentracing-clj)
 Opentracing API support for Clojure built on top of
 [opentracing-java](https://github.com/opentracing/opentracing-java).
 
