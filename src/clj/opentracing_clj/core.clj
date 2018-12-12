@@ -137,22 +137,32 @@
 (s/def :opentracing/microseconds-since-epoch int?)
 (s/def :opentracing/span #(instance? Span %))
 (s/def :opentracing/span-context #(instance? SpanContext %))
-(s/def :opentracing.span-init/name string?)
-(s/def :opentracing.span-init/tags map?)
-(s/def :opentracing.span-init/ignore-active? boolean?)
-(s/def :opentracing.span-init/timestamp :opentracing/microseconds-since-epoch)
-(s/def :opentracing.span-init/child-of (s/nilable
+(s/def :opentracing.span-data/name string?)
+(s/def :opentracing.span-data/tags map?)
+(s/def :opentracing.span-data/ignore-active? boolean?)
+(s/def :opentracing.span-data/timestamp :opentracing/microseconds-since-epoch)
+(s/def :opentracing.span-data/child-of (s/nilable
                                         (s/or :opentracing/span
                                               :opentracing/span-context)))
-(s/def :opentracing.span-init/finish? boolean?)
+(s/def :opentracing.span-data/finish? boolean?)
+
+(s/def :opentracing/span-data
+  (s/keys :req-un [:opentracing.span-data/name]
+          :opt-un [:opentracing.span-data/tags
+                   :opentracing.span-data/ignore-active?
+                   :opentracing.span-data/timestamp
+                   :opentracing.span-data/child-of
+                   :opentracing.span-data/finish?]))
+
+(s/def :opentracing.span-ref/from :opentracing/span)
+(s/def :opentracing.span-ref/finish? boolean?)
+(s/def :opentracing/span-ref
+  (s/keys :req-un [:opentracing.span-ref/from]
+          :opt-un [:opentracing.span-ref/finish?]))
 
 (s/def :opentracing/span-init
-  (s/keys :req-un [:opentracing.span-init/name]
-          :opt-un [:opentracing.span-init/tags
-                   :opentracing.span-init/ignore-active?
-                   :opentracing.span-init/timestamp
-                   :opentracing.span-init/child-of
-                   :opentracing.span-init/finish?]))
+  (s/or :new :opentracing/span-data
+        :existing :opentracing/span-ref))
 
 (s/def :opentracing/span-binding
   (s/spec
@@ -169,23 +179,36 @@
   [bindings & body]
   (let [s (bindings 0)
         m (bindings 1)]
-    `(let [m# ~m]
-       (if (s/valid? :opentracing/span-init m#)
-         (let [sb# (sb/build-span *tracer* (:name m#))]
-           (when-let [tags# (:tags m#)]
-             (sb/add-tags sb# tags#))
-           (when (:ignore-active? m#)
-             (sb/ignore-active sb#))
-           (when-let [start-ts# (:start-timestamp m#)]
-             (sb/with-start-timestamp sb# start-ts#))
-           (when-let [parent# (:child-of m#)]
-             (sb/child-of sb# parent#))
-           (with-open [^Scope scope# (sb/start sb# (or (nil? (:finish? m#))
-                                                       (:finish? m#)))]
-             (let [~s (.span scope#)]
-               ~@body)))
-         (throw (ex-info "with-span binding failed to conform to :opentracing/span-init"
-                         (s/explain-data :opentracing/span-init m#)))))))
+    `(let [m#  ~m
+           st# (s/conform :opentracing/span-init m#)]
+       (cond (= :clojure.spec.alpha/invalid st#)
+             (throw (ex-info "with-span binding failed to conform to :opentracing/span-init"
+                             (s/explain-data :opentracing/span-init m#)))
+
+             (= :new (first st#))
+             (let [sb# (sb/build-span *tracer* (:name m#))]
+               (when-let [tags# (:tags m#)]
+                 (sb/add-tags sb# tags#))
+               (when (:ignore-active? m#)
+                 (sb/ignore-active sb#))
+               (when-let [start-ts# (:start-timestamp m#)]
+                 (sb/with-start-timestamp sb# start-ts#))
+               (when-let [parent# (:child-of m#)]
+                 (sb/child-of sb# parent#))
+               (with-open [^Scope scope# (sb/start sb# (or (nil? (:finish? m#))
+                                                           (:finish? m#)))]
+                 (let [~s (.span scope#)]
+                   ~@body)))
+
+             (= :existing (first st#))
+             (with-open [^Scope scope# (.activate (.scopeManager *tracer*) (:from m#)
+                                                  (or (nil? (:finish? m#))
+                                                      (:finish? m#)))]
+               (let [~s (.span scope#)]
+                 ~@body))
+
+             :else
+             (throw (ex-info "Unknown error." {}))))))
 
 (s/fdef with-span
   :args (s/cat :binding :opentracing/span-binding
