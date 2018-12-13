@@ -1,5 +1,4 @@
 (ns ^:no-doc opentracing-clj.span-builder
-  (:require [clojure.walk :as walk])
   (:import (io.opentracing Span SpanContext Tracer Tracer$SpanBuilder)))
 
 (defn add-reference

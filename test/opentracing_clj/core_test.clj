@@ -213,8 +213,8 @@
         (with-span [s {:name span-name
                        :tags span-tags}]
           (+ 1 1))
-        (is (= (.tags (first (.finishedSpans *tracer*)))
-               (walk/stringify-keys span-tags)))))
+        (is (= (walk/stringify-keys span-tags)
+               (.tags (first (.finishedSpans *tracer*)))))))
 
 
     (testing "existing span"
