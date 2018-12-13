@@ -214,4 +214,21 @@
                        :tags span-tags}]
           (+ 1 1))
         (is (= (.tags (first (.finishedSpans *tracer*)))
-               (walk/stringify-keys span-tags)))))))
+               (walk/stringify-keys span-tags)))))
+
+
+    (testing "existing span"
+      (.reset *tracer*)
+      (let [s1        (-> *tracer* (.buildSpan "test") (.start))
+            process-1 (future
+                        (with-span [t {:from s1}]
+                          (is (= s1 (.activeSpan *tracer*))))
+                        (is (= 1 (count (.finishedSpans *tracer*)))))
+            s2        (-> *tracer* (.buildSpan "test") (.start))
+            process-2 (future
+                        (with-span [t {:from    s2
+                                       :finish? false}]
+                          (is (= s2 (.activeSpan *tracer*))))
+                        (is (= 1 (count (.finishedSpans *tracer*)))))]
+        @process-1
+        @process-2))))
