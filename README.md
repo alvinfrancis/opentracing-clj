@@ -14,6 +14,13 @@ Add the following dependency to your project or build file:
 
 - [API Docs](http://alvinfrancis.github.com/opentracing-clj)
 
+## Required Reading
+
+In order to better understand the project, it will be helpful to be
+first familiar with the [OpenTracing project](http://opentracing.io)
+and [terminology](http://opentracing.io/documentation/pages/spec.html)
+more specifically.
+
 ## Usage
 
 ### Creating Spans
@@ -31,14 +38,36 @@ prior.
   ...)
 ```
 
-The `with-span` macro requires a `:name` set for the span init binding
-along with the following options for customizing the span.
+The `with-span` macro configures the creation of the span by
+specifying necessary information through the span binding map.  The
+following fields are used to configured the behaviour of `with-span`.
 
+*Required*
+- `:name` - Operation name of the span (required)
+
+*Optional*
 - `:tags` - A map of tags (will force keys or values into strings as necessary)
 - `:ignore-active?` - Set whether the created span should be set as child of the current scoped span
 - `:timestamp` - Start timestamp of the span in microseconds
 - `:child-of` - Manually set which span (or span context) the new span should be child of
 - `:finish?` - Set whether the span should be finished at the end of the scope
+
+Alternatively, instead of creating a new span, the `with-span` macro
+can also accept a span in the case of activating an existing span
+within the scope of the `with-span`.  In this instance, the following
+fields are used to configure the behaviour of `with-span`.
+
+*Required*
+- `:from` - Span to activate within the scope of the body
+
+*Optional*
+- `:finish?` - Set whether the span should be finished at the end of the scope
+
+``` clojure
+(tracing/with-span [s {:from some-span
+                       :finish? false}]
+  ...)
+```
 
 Note that spans created by opentracing-clj are also compatible with
 those created by opentracing-java (and vice versa); keeping the span
@@ -60,6 +89,48 @@ specified.
   )
 
 (tracing/log "no-op") ; span functions are no-op (and evaluate to nil) if there is no active span
+```
+
+### Async
+
+`with-span` will only set the active span for the thread and scope
+where it was invoked.  Code that is run on a separate thread will not
+pick up the active span.
+
+``` clojure
+(tracing/with-span [s {:name "test"}]
+  (let [async (future (tracing/active-span))]
+    (= @async s) ; => false
+    ))
+```
+
+To keep a span active in a separate thread, the active span can be
+passed directly to `with-span`.
+
+``` clojure
+(tracing/with-span [s0 {:name "test"}]
+  (let [async (future
+                (tracing/with-span [s1 {:from    s0
+                                        :finish? false}] ; NOTE: finish? is set to false to prevent early finishing of the span
+                  (= s1 s0 (tracing/active-span)) ; => true
+                  (tracing/active-span)))]
+    (= s0 @async) ; => true
+    ))
+```
+
+It is important to remember that `with-span` defaults to finishing a
+span at the end of its scope.  This can cause exceptions if multiple
+paths can cause a span to be finished.
+
+``` clojure
+;; This would complain about finishing an already finished span since
+;; the async with-span would finish the span before the main thread
+;; with-span.
+
+(tracing/with-span [s0 {:name "test"}]
+  (let [async-1 (future (tracing/with-span [s1 {:from s0}] ...))]
+    @async-1
+    ...))
 ```
 
 ### Ring Middleware
