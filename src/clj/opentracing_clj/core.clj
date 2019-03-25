@@ -161,8 +161,8 @@
           :opt-un [:opentracing.span-ref/finish?]))
 
 (s/def :opentracing/span-init
-  (s/or :new :opentracing/span-data
-        :existing :opentracing/span-ref))
+  (s/or :existing :opentracing/span-ref
+        :new :opentracing/span-data))
 
 (s/def :opentracing/span-binding
   (s/spec

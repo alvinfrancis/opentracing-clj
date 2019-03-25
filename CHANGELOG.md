@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Fixed
+- Fix `with-span` to use the existing span behaviour when the initializing spec is ambiguous.
+
 ## [0.1.2] - 2018-12-17
 ### Added
 - Existing spans can now be passed to `with-span`.

@@ -231,4 +231,17 @@
                           (is (= s2 (.activeSpan *tracer*))))
                         (is (= 1 (count (.finishedSpans *tracer*)))))]
         @process-1
-        @process-2))))
+        @process-2))
+
+    (testing "ambiguous spec"
+      (.reset *tracer*)
+      (let [existing (-> *tracer* (.buildSpan "test") (.start))
+            process  (future
+                       ;; an init spec conforming to both the
+                       ;; existing span spec and the new span spec
+                       ;; should choose to use the existing span spec
+                       (with-span [t {:name "new"
+                                      :from existing}]
+                         (is (= existing (.activeSpan *tracer*))))
+                       (is (= 1 (count (.finishedSpans *tracer*)))))]
+        process))))
