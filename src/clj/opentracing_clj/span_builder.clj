@@ -38,7 +38,9 @@
   [^Tracer$SpanBuilder sb timestamp]
   (.withStartTimestamp sb timestamp))
 
-(defn start
+(defn ^:deprecated start
+  "**DEPRECATED**  The underlying API has been deprecated.  Just call
+  `(.start sb)` instead."
   ([^Tracer$SpanBuilder sb finish-on-close?]
    (.startActive sb finish-on-close?)))
 
