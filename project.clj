@@ -6,7 +6,7 @@
             :distribution :repo}
   :source-paths ["src/clj"]
   :plugins [[lein-codox "0.10.4"]]
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  [io.opentracing/opentracing-api "0.32.0"]
                  [io.opentracing/opentracing-noop "0.32.0"]
                  [io.opentracing/opentracing-util "0.32.0"]
