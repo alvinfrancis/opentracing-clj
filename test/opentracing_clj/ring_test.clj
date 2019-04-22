@@ -31,23 +31,37 @@
                 headers (propagation/inject (tracing/context s) :http)
                 request (reduce (fn [r header]
                                   (mock/header r (key header) (val header)))
-                                base-request headers)]
+                                base-request
+                                headers)]
             (vreset! response (handler request))
-            (is (= 200 (:status @response))))))
+            (is (= 200 (:status @response)))))
 
-      (let [spans (.finishedSpans tracing/*tracer*)]
-        (testing "spans recorded"
-          (is (= 2 (count spans))))
+        (let [spans (.finishedSpans tracing/*tracer*)]
+          (testing "spans recorded"
+            (is (= 2 (count spans))))
 
-        (testing "operation name"
-          (is (= (.operationName (nth spans 0))
-                 (default-op-name base-request))))
+          (testing "operation name"
+            (is (= (.operationName (nth spans 0))
+                   (default-op-name base-request))))
 
-        (testing "tags set"
-          (is (= (walk/keywordize-keys (into {} (.tags (nth spans 0))))
-                 (merge (default-request-tags base-request)
-                        (default-response-tags @response)))))
+          (testing "tags set"
+            (is (= (walk/keywordize-keys (into {} (.tags (nth spans 0))))
+                   (merge (default-request-tags base-request)
+                          (default-response-tags @response)))))
 
-        (testing "client finish"
-          (is (= (.operationName (nth spans 1))
-                 (:name client-span))))))))
+          (testing "client finish"
+            (is (= (.operationName (nth spans 1))
+                   (:name client-span))))))
+
+      (testing "nested invocation"
+        (.reset tracing/*tracer*)
+        (let [handler (-> mock-handler
+                          (wrap-opentracing)
+                          (wrap-opentracing))]
+          (vreset! response (handler base-request))
+          (is (= {:status 200} @response)
+              "response passed through")
+
+          (let [spans (.finishedSpans tracing/*tracer*)]
+            (is (= 1 (count spans))
+                "only a single span was recorded")))))))

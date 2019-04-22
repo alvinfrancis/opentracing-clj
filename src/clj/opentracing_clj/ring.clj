@@ -36,10 +36,12 @@
    (wrap-opentracing handler op-name-fn request-tags-fn default-response-tags))
   ([handler op-name-fn request-tags-fn response-tags-fn]
    (fn [request]
-     (let [ctx (propagation/extract (:headers request) :http)]
-       (tracing/with-span [s {:name     (op-name-fn request)
-                              :child-of ctx
-                              :tags     (request-tags-fn request)}]
-         (let [response (handler (assoc request ::span s))]
-           (tracing/set-tags s (response-tags-fn response))
-           response))))))
+     (if (some? (::span request))
+       (handler request)
+       (let [ctx (propagation/extract (:headers request) :http)]
+         (tracing/with-span [s {:name (op-name-fn request)
+                                :child-of ctx
+                                :tags (request-tags-fn request)}]
+           (let [response (handler (assoc request ::span s))]
+             (tracing/set-tags s (response-tags-fn response))
+             response)))))))
