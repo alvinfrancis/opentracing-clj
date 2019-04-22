@@ -195,17 +195,24 @@
                  (sb/with-start-timestamp sb# start-ts#))
                (when-let [parent# (:child-of m#)]
                  (sb/child-of sb# parent#))
-               (with-open [^Scope scope# (sb/start sb# (or (nil? (:finish? m#))
-                                                           (:finish? m#)))]
-                 (let [~s (.span scope#)]
-                   ~@body)))
+               (let [^Span ~s (.start sb#)]
+                 (with-open [^Scope _# (.activate (.scopeManager *tracer*)
+                                                  ~s)]
+                   (try
+                     ~@body
+                     (finally
+                       (when (:finish? m# true)
+                         (.finish ~s)))))))
 
              (= :existing (first st#))
-             (with-open [^Scope scope# (.activate (.scopeManager *tracer*) (:from m#)
-                                                  (or (nil? (:finish? m#))
-                                                      (:finish? m#)))]
-               (let [~s (.span scope#)]
-                 ~@body))
+             (let [~s (:from m#)]
+               (with-open [^Scope _# (.activate (.scopeManager *tracer*)
+                                                ~s)]
+                 (try
+                   ~@body
+                   (finally
+                     (when (:finish? m# true)
+                       (.finish ~s))))))
 
              :else
              (throw (ex-info "Unknown error." {}))))))
