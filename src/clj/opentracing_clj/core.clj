@@ -22,7 +22,7 @@
   "Returns the current active span."
   []
   (when *tracer*
-    (.activeSpan *tracer*)))
+    (.activeSpan (.scopeManager *tracer*))))
 
 (defmacro with-active-span
   "Convenience macro for setting sym to the current active span.  Will
