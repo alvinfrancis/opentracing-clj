@@ -10,7 +10,7 @@
                  [io.opentracing/opentracing-api "0.32.0"]
                  [io.opentracing/opentracing-noop "0.32.0"]
                  [io.opentracing/opentracing-util "0.32.0"]
-                 [ring "1.6.3"]]
+                 [ring/ring-core "1.7.1"]]
   :codox {:output-path "codox"
           :metadata    {:doc/format :markdown}
           :source-uri  "https://github.com/alvinfrancis/opentracing-clj/blob/v{version}/{filepath}#L{line}"}
