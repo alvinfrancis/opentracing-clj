@@ -242,5 +242,6 @@
                        (with-span [t {:name "new"
                                       :from existing}]
                          (is (= existing (.activeSpan *tracer*))))
-                       (is (= 1 (count (.finishedSpans *tracer*)))))]
-        process))))
+                       )]
+        @process
+        (is (= 1 (count (.finishedSpans *tracer*))))))))
