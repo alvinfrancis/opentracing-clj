@@ -7,12 +7,12 @@
   :source-paths ["src/clj"]
   :plugins [[lein-codox "0.10.4"]]
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [io.opentracing/opentracing-api "0.31.0"]
-                 [io.opentracing/opentracing-noop "0.31.0"]
-                 [io.opentracing/opentracing-util "0.31.0"]
+                 [io.opentracing/opentracing-api "0.32.0"]
+                 [io.opentracing/opentracing-noop "0.32.0"]
+                 [io.opentracing/opentracing-util "0.32.0"]
                  [ring "1.6.3"]]
   :codox {:output-path "codox"
           :metadata    {:doc/format :markdown}
           :source-uri  "https://github.com/alvinfrancis/opentracing-clj/blob/v{version}/{filepath}#L{line}"}
-  :profiles {:test {:dependencies [[io.opentracing/opentracing-mock "0.31.0"]
+  :profiles {:test {:dependencies [[io.opentracing/opentracing-mock "0.32.0"]
                                    [ring/ring-mock "0.3.2"]]}})
