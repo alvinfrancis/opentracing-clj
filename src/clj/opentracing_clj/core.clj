@@ -7,6 +7,8 @@
    [opentracing-clj.span-builder :as sb]
    [ring.util.request])
   (:import (io.opentracing Span SpanContext Tracer Scope)
+           (io.opentracing.log Fields)
+           (io.opentracing.tag Tags)
            (io.opentracing.util GlobalTracer)))
 
 (def ^:dynamic ^Tracer *tracer*
@@ -200,6 +202,13 @@
                                                   ~s)]
                    (try
                      ~@body
+                     (catch Exception e#
+                       (.set Tags/ERROR ~s true)
+                       (.log ~s
+                             {Fields/EVENT "error"
+                              Fields/ERROR_OBJECT e#
+                              Fields/MESSAGE (.getMessage e#)})
+                       (throw e#))
                      (finally
                        (when (:finish? m# true)
                          (.finish ~s)))))))
@@ -210,6 +219,13 @@
                                                 ~s)]
                  (try
                    ~@body
+                   (catch Exception e#
+                     (.set Tags/ERROR ~s true)
+                     (.log ~s
+                           {Fields/EVENT "error"
+                            Fields/ERROR_OBJECT e#
+                            Fields/MESSAGE (.getMessage e#)})
+                     (throw e#))
                    (finally
                      (when (:finish? m# true)
                        (.finish ~s))))))

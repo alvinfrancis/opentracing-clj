@@ -244,4 +244,51 @@
                          (is (= existing (.activeSpan *tracer*))))
                        )]
         @process
-        (is (= 1 (count (.finishedSpans *tracer*))))))))
+        (is (= 1 (count (.finishedSpans *tracer*))))))
+
+    (testing "failing spans"
+      (testing "a new span"
+        (.reset *tracer*)
+        (let [span-name "boom"
+              error (Exception. "BOOM!")]
+          (is (thrown? Exception
+                       (with-span [s {:name span-name}]
+                         (throw error))))
+          (is (= 1 (count (.finishedSpans *tracer*))))
+          (let [finished-span (first (.finishedSpans *tracer*))
+                tags (.tags finished-span)
+                log-entries (.logEntries finished-span)]
+            (is (= span-name (.operationName finished-span))
+                "span with correct name finished")
+            (is (true? (get tags "error"))
+                "error tag is present on finished span")
+            (is (= 1 (count log-entries))
+                "a log entry is present")
+            (is (= {"event" "error"
+                    "error.object" error
+                    "message" "BOOM!"}
+                   (.fields (first log-entries)))
+                "log entry has correct fields"))))
+      (testing "from an existing span"
+        (.reset *tracer*)
+        (let [span-name "boom"
+              existing (.start (.buildSpan *tracer* span-name))
+              error (Exception. "BOOM!")]
+          (is (thrown? Exception
+                       (with-span [s {:from existing}]
+                         (throw error))))
+          (is (= 1 (count (.finishedSpans *tracer*))))
+          (let [finished-span (first (.finishedSpans *tracer*))
+                tags (.tags finished-span)
+                log-entries (.logEntries finished-span)]
+            (is (= span-name (.operationName finished-span))
+                "span with correct name finished")
+            (is (true? (get tags "error"))
+                "error tag is present on finished span")
+            (is (= 1 (count log-entries))
+                "a log entry is present")
+            (is (= {"event" "error"
+                    "error.object" error
+                    "message" "BOOM!"}
+                   (.fields (first log-entries)))
+                "log entry has correct fields")))))))
