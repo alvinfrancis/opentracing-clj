@@ -216,20 +216,20 @@
         m (bindings 1)]
     `(let [m#  ~m
            ~s  (get-span* m#)]
-       (with-open [^Scope _# (.activate (.scopeManager *tracer*)
-                                        ~s)]
-         (try
-           ~@body
-           (catch Exception e#
-             (.set Tags/ERROR ~s true)
-             (.log ~s
-                   {Fields/EVENT "error"
-                    Fields/ERROR_OBJECT e#
-                    Fields/MESSAGE (.getMessage e#)})
-             (throw e#))
-           (finally
-             (when (:finish? m# true)
-               (.finish ~s))))))))
+       (try
+         (with-open [^Scope _# (.activate (.scopeManager *tracer*)
+                                          ~s)]
+           ~@body)
+         (catch Exception e#
+           (.set Tags/ERROR ~s true)
+           (.log ~s
+                 {Fields/EVENT "error"
+                  Fields/ERROR_OBJECT e#
+                  Fields/MESSAGE (.getMessage e#)})
+           (throw e#))
+         (finally
+           (when (:finish? m# true)
+             (.finish ~s)))))))
 
 (s/fdef with-span
   :args (s/cat :binding :opentracing/span-binding
