@@ -189,7 +189,7 @@
   :args (s/cat :span-data :opentracing/span-data)
   :ret :opentracing/span)
 
-(defn get-span
+(defn ^:internal get-span*
   "Given a span-init, return the existing or new span."
   [span-init]
   (let [conformed-span-init (s/conform :opentracing/span-init span-init)]
@@ -200,7 +200,7 @@
         :new (build-new-span span-init)
         :existing (:from span-init)))))
 
-(s/fdef get-span
+(s/fdef get-span*
   :args (s/cat :span-init :opentracing/span-init)
   :ret :opentracing/span)
 
@@ -215,7 +215,7 @@
   (let [s (bindings 0)
         m (bindings 1)]
     `(let [m#  ~m
-           ~s  (get-span m#)]
+           ~s  (get-span* m#)]
        (with-open [^Scope _# (.activate (.scopeManager *tracer*)
                                         ~s)]
          (try
