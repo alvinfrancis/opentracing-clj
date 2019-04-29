@@ -172,7 +172,7 @@
           :span-spec any?)))
 
 (defn ^:private build-new-span
-  "Given a span-data, create and return a new span["
+  "Given a span-data, create and return a new span."
   ^Span [span-data]
   (let [builder (sb/build-span *tracer* (:name span-data))]
     (when-let [tags# (:tags span-data)]
