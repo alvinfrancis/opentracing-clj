@@ -211,9 +211,9 @@
 
   span-init-spec must evaluate at runtime to a value conforming to
   the :opentracing/span-init spec."
-  [bindings & body]
-  (let [s (bindings 0)
-        m (bindings 1)]
+  [binding & body]
+  (let [s (binding 0)
+        m (binding 1)]
     `(let [m#  ~m
            ~s  (get-span* m#)]
        (try
