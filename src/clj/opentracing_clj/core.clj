@@ -193,7 +193,7 @@
   :args (s/cat :span-data :opentracing/span-data)
   :ret :opentracing/span)
 
-(defn ^:internal get-span*
+(defn ^:internal ^:no-doc get-span*
   "Given a span-init, return the existing or new span."
   [span-init]
   (let [conformed-span-init (s/conform :opentracing/span-init span-init)]
