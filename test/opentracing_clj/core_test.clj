@@ -248,47 +248,133 @@
 
     (testing "failing spans"
       (testing "a new span"
-        (.reset *tracer*)
-        (let [span-name "boom"
-              error (Exception. "BOOM!")]
-          (is (thrown? Exception
-                       (with-span [s {:name span-name}]
-                         (throw error))))
-          (is (= 1 (count (.finishedSpans *tracer*))))
-          (let [finished-span (first (.finishedSpans *tracer*))
-                tags (.tags finished-span)
-                log-entries (.logEntries finished-span)]
-            (is (= span-name (.operationName finished-span))
-                "span with correct name finished")
-            (is (true? (get tags "error"))
-                "error tag is present on finished span")
-            (is (= 1 (count log-entries))
-                "a log entry is present")
-            (is (= {"event" "error"
-                    "error.object" error
-                    "message" "BOOM!"}
-                   (.fields (first log-entries)))
-                "log entry has correct fields"))))
+        (testing "default option"
+          (.reset *tracer*)
+          (let [span-name "boom"
+                error (Exception. "BOOM!")]
+            (is (thrown? Exception
+                         (with-span [_ {:name span-name}]
+                           (throw error))))
+            (is (= 1 (count (.finishedSpans *tracer*))))
+            (let [finished-span (first (.finishedSpans *tracer*))
+                  tags (.tags finished-span)
+                  log-entries (.logEntries finished-span)]
+              (is (= span-name (.operationName finished-span))
+                  "span with correct name finished")
+              (is (true? (get tags "error"))
+                  "error tag is present on finished span")
+              (is (= 1 (count log-entries))
+                  "a log entry is present")
+              (is (= {"event" "error"
+                      "error.object" error
+                      "message" "BOOM!"}
+                     (.fields (first log-entries)))
+                  "log entry has correct fields"))))
+        (testing "explicitly process exceptions"
+          (.reset *tracer*)
+          (let [span-name "boom"
+                error (Exception. "BOOM!")]
+            (is (thrown? Exception
+                         (with-span [_ {:name span-name
+                                        :process-exceptions? true}]
+                           (throw error))))
+            (is (= 1 (count (.finishedSpans *tracer*))))
+            (let [finished-span (first (.finishedSpans *tracer*))
+                  tags (.tags finished-span)
+                  log-entries (.logEntries finished-span)]
+              (is (= span-name (.operationName finished-span))
+                  "span with correct name finished")
+              (is (true? (get tags "error"))
+                  "error tag is present on finished span")
+              (is (= 1 (count log-entries))
+                  "a log entry is present")
+              (is (= {"event" "error"
+                      "error.object" error
+                      "message" "BOOM!"}
+                     (.fields (first log-entries)))
+                  "log entry has correct fields"))))
+        (testing "don't process exceptions"
+          (.reset *tracer*)
+          (let [span-name "boom"
+                error (Exception. "BOOM!")]
+            (is (thrown? Exception
+                         (with-span [_ {:name span-name
+                                        :process-exceptions? false}]
+                           (throw error))))
+            (is (= 1 (count (.finishedSpans *tracer*))))
+            (let [finished-span (first (.finishedSpans *tracer*))
+                  tags (.tags finished-span)
+                  log-entries (.logEntries finished-span)]
+              (is (= span-name (.operationName finished-span))
+                  "span with correct name finished")
+              (is (not (contains? tags "error"))
+                  "no error tag is present on finished span")
+              (is (zero? (count log-entries))
+                  "no log entry is present")))))
       (testing "from an existing span"
-        (.reset *tracer*)
-        (let [span-name "boom"
-              existing (.start (.buildSpan *tracer* span-name))
-              error (Exception. "BOOM!")]
-          (is (thrown? Exception
-                       (with-span [s {:from existing}]
-                         (throw error))))
-          (is (= 1 (count (.finishedSpans *tracer*))))
-          (let [finished-span (first (.finishedSpans *tracer*))
-                tags (.tags finished-span)
-                log-entries (.logEntries finished-span)]
-            (is (= span-name (.operationName finished-span))
-                "span with correct name finished")
-            (is (true? (get tags "error"))
-                "error tag is present on finished span")
-            (is (= 1 (count log-entries))
-                "a log entry is present")
-            (is (= {"event" "error"
-                    "error.object" error
-                    "message" "BOOM!"}
-                   (.fields (first log-entries)))
-                "log entry has correct fields")))))))
+        (testing "default option"
+          (.reset *tracer*)
+          (let [span-name "boom"
+                existing (.start (.buildSpan *tracer* span-name))
+                error (Exception. "BOOM!")]
+            (is (thrown? Exception
+                         (with-span [_ {:from existing}]
+                           (throw error))))
+            (is (= 1 (count (.finishedSpans *tracer*))))
+            (let [finished-span (first (.finishedSpans *tracer*))
+                  tags (.tags finished-span)
+                  log-entries (.logEntries finished-span)]
+              (is (= span-name (.operationName finished-span))
+                  "span with correct name finished")
+              (is (true? (get tags "error"))
+                  "error tag is present on finished span")
+              (is (= 1 (count log-entries))
+                  "a log entry is present")
+              (is (= {"event" "error"
+                      "error.object" error
+                      "message" "BOOM!"}
+                     (.fields (first log-entries)))
+                  "log entry has correct fields"))))
+        (testing "explicitly process exceptions"
+          (.reset *tracer*)
+          (let [span-name "boom"
+                existing (.start (.buildSpan *tracer* span-name))
+                error (Exception. "BOOM!")]
+            (is (thrown? Exception
+                         (with-span [_ {:from existing
+                                        :process-exceptions? true}]
+                           (throw error))))
+            (is (= 1 (count (.finishedSpans *tracer*))))
+            (let [finished-span (first (.finishedSpans *tracer*))
+                  tags (.tags finished-span)
+                  log-entries (.logEntries finished-span)]
+              (is (= span-name (.operationName finished-span))
+                  "span with correct name finished")
+              (is (true? (get tags "error"))
+                  "error tag is present on finished span")
+              (is (= 1 (count log-entries))
+                  "a log entry is present")
+              (is (= {"event" "error"
+                      "error.object" error
+                      "message" "BOOM!"}
+                     (.fields (first log-entries)))
+                  "log entry has correct fields"))))
+        (testing "don't process exceptions"
+          (.reset *tracer*)
+          (let [span-name "boom"
+                existing (.start (.buildSpan *tracer* span-name))
+                error (Exception. "BOOM!")]
+            (is (thrown? Exception
+                         (with-span [_ {:from existing
+                                        :process-exceptions? false}]
+                           (throw error))))
+            (is (= 1 (count (.finishedSpans *tracer*))))
+            (let [finished-span (first (.finishedSpans *tracer*))
+                  tags (.tags finished-span)
+                  log-entries (.logEntries finished-span)]
+              (is (= span-name (.operationName finished-span))
+                  "span with correct name finished")
+              (is (not (contains? tags "error"))
+                  "error tag is not present on finished span")
+              (is (zero? (count log-entries))
+                  "a log entry is not present"))))))))
