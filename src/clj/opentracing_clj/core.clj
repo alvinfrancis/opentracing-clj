@@ -147,7 +147,6 @@
                                         (s/or :opentracing/span
                                               :opentracing/span-context)))
 (s/def :opentracing.span-data/finish? boolean?)
-(s/def :opentracing.span-data/process-exceptions? boolean?)
 
 (s/def :opentracing/span-data
   (s/keys :req-un [:opentracing.span-data/name]
@@ -155,16 +154,13 @@
                    :opentracing.span-data/ignore-active?
                    :opentracing.span-data/timestamp
                    :opentracing.span-data/child-of
-                   :opentracing.span-data/finish?
-                   :opentracing.span-data/process-exceptions?]))
+                   :opentracing.span-data/finish?]))
 
 (s/def :opentracing.span-ref/from :opentracing/span)
 (s/def :opentracing.span-ref/finish? boolean?)
-(s/def :opentracing.span-ref/process-exceptions? boolean?)
 (s/def :opentracing/span-ref
   (s/keys :req-un [:opentracing.span-ref/from]
-          :opt-un [:opentracing.span-ref/finish?
-                   :opentracing.span-ref/process-exceptions?]))
+          :opt-un [:opentracing.span-ref/finish?]))
 
 (s/def :opentracing/span-init
   (s/or :existing :opentracing/span-ref
@@ -224,14 +220,6 @@
          (with-open [^Scope _# (.activate (.scopeManager *tracer*)
                                           ~s)]
            ~@body)
-         (catch Exception e#
-           (when (:process-exceptions? m# true)
-             (.set Tags/ERROR ~s true)
-             (.log ~s
-                   {Fields/EVENT "error"
-                    Fields/ERROR_OBJECT e#
-                    Fields/MESSAGE (.getMessage e#)}))
-           (throw e#))
          (finally
            (when (:finish? m# true)
              (.finish ~s)))))))
