@@ -104,7 +104,7 @@
         (is (= ms (.startMicros (.span scope))))))))
 
 (deftest start-test
-  (testing "start"
+  (testing "deprecated start"
     (is (= 0 (do (with-open [scope (-> (-> *tracer* (.buildSpan "test")) (start false))])
                  (count (.finishedSpans *tracer*)))))
     (.reset *tracer*)
