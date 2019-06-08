@@ -25,7 +25,27 @@
           client-span  {:name "client"}
           response     (volatile! nil)]
 
+      (testing "server only"
+        (let [handler (-> mock-handler (wrap-opentracing))
+              request base-request]
+          (vreset! response (handler request))
+          (is (= 200 (:status @response))))
+
+        (let [spans (.finishedSpans tracing/*tracer*)]
+          (testing "spans recorded"
+            (is (= 1 (count spans))))
+
+          (testing "operation name"
+            (is (= (.operationName (nth spans 0))
+                   (default-op-name base-request))))
+
+          (testing "tags set"
+            (is (= (walk/keywordize-keys (into {} (.tags (nth spans 0))))
+                   (merge (default-request-tags base-request)
+                          (default-response-tags @response)))))))
+
       (testing "pass-through"
+        (.reset tracing/*tracer*)
         (tracing/with-span [s client-span]
           (let [handler (-> mock-handler (wrap-opentracing))
                 headers (propagation/inject (tracing/context s) :http)
