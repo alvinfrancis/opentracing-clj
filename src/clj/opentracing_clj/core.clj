@@ -7,8 +7,6 @@
    [opentracing-clj.span-builder :as sb]
    [ring.util.request])
   (:import (io.opentracing Span SpanContext Tracer Scope)
-           (io.opentracing.log Fields)
-           (io.opentracing.tag Tags)
            (io.opentracing.util GlobalTracer)))
 
 (def ^:dynamic ^Tracer *tracer*
