@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+### Changed
+- Dependency updates
+  - opentracing 0.31.0 to 0.32.0
+  - ring 1.6.3 to ring-core 1.7.1
+
+### Fixed
+- Nesting `wrap-opentracing` middleware will no longer create multiple spans.
+
 ## [0.1.3] - 2019-03-25
 ### Fixed
 - Fix `with-span` to use the existing span behaviour when the initializing spec is ambiguous.
