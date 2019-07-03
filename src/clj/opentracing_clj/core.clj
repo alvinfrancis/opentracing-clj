@@ -225,3 +225,82 @@
 (s/fdef with-span
   :args (s/cat :binding :opentracing/span-binding
                :body    (s/* any?)))
+
+(comment
+  ;; Modified version from clojure.tools.trace
+
+  (defn trace-fn-call
+    "Traces a single call to a function f with args. 'name' is the
+  symbol name of the function."
+    [name f args]
+    (tracing/with-span [s {:name name}]
+      (try
+        (apply f args)
+        (catch Exception e
+          (tracing/set-tags {:error true})
+          (tracing/log (merge {:event        "error"
+                               :message      ex-message
+                               :error.kind   ex-class
+                               :error.object exception
+                               :stack        ex-stack}))
+          (throw e)))))
+
+  (defn ^:private trace-var*
+    "If the specified Var holds an IFn and is not marked as a macro, its
+  contents is replaced with a version wrapped in a tracing call;
+  otherwise nothing happens. Can be undone with untrace-var.
+  In the unary case, v should be a Var object or a symbol to be
+  resolved in the current namespace.
+  In the binary case, ns should be a namespace object or a symbol
+  naming a namespace and s a symbol to be resolved in that namespace."
+    ([ns s]
+     (trace-var* (ns-resolve ns s)))
+    ([v]
+     (let [^clojure.lang.Var v (if (var? v) v (resolve v))
+           ns                  (.ns v)
+           s                   (.sym v)]
+       (if (and (ifn? @v) (-> v meta :macro not) (-> v meta ::traced not))
+         (let [f     @v
+               vname (symbol (str ns "/" s))]
+           (doto v
+             (alter-var-root #(fn tracing-wrapper [& args]
+                                (trace-fn-call vname % args)))
+             (alter-meta! assoc ::traced f)))))))
+
+  (defn ^:private untrace-var*
+    "Reverses the effect of trace-var / trace-vars / trace-ns for the
+  given Var, replacing the traced function with the original, untraced
+  version. No-op for non-traced Vars.
+  Argument types are the same as those for trace-var."
+    ([ns s]
+     (untrace-var* (ns-resolve ns s)))
+    ([v]
+     (let [^clojure.lang.Var v (if (var? v) v (resolve v))
+           ns                  (.ns v)
+           s                   (.sym v)
+           f                   ((meta v) ::traced)]
+       (when f
+         (doto v
+           (alter-var-root (constantly ((meta v) ::traced)))
+           (alter-meta! dissoc ::traced))))))
+
+  (defmacro trace-vars
+    "Trace each of the specified Vars.
+  The arguments may be Var objects or symbols to be resolved in the current
+  namespace."
+    [& vs]
+    `(do ~@(for [x vs]
+             `(if (var? ~x)
+                (trace-var* ~x)
+                (trace-var* (quote ~x))))))
+
+  (defmacro untrace-vars
+    "Untrace each of the specified Vars.
+  Reverses the effect of trace-var / trace-vars / trace-ns for each
+  of the arguments, replacing the traced functions with the original,
+  untraced versions."
+    [& vs]
+    `(do ~@(for [x vs]
+             `(if (var? ~x)
+                (untrace-var* ~x)
+                (untrace-var* (quote ~x)))))))
