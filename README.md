@@ -10,6 +10,10 @@ Add the following dependency to your project or build file:
 [opentracing-clj "0.1.4"]
 ```
 
+## Requirements
+
+Supports Opentracing 0.32.0 and onward.
+
 ## Documentation
 
 - [API Docs](http://alvinfrancis.github.com/opentracing-clj)
