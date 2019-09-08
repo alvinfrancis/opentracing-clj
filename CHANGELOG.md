@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.1.5] - 2019-09-08
 ### Fixed
 - Fix `:opentracing.span-data/child-of` spec.
 
@@ -32,7 +34,8 @@ All notable changes to this project will be documented in this file. This change
 - Middleware for instrumenting Ring.
 - Functions for handling span context propagation.
 
-[Unreleased]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.4...0.1.5
 [0.1.4]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.0...v0.1.2
