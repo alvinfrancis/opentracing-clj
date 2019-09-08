@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Fixed
+- Fix `:opentracing.span-data/child-of` spec.
 
 ## [0.1.4] - 2019-06-17
 ### Changed
