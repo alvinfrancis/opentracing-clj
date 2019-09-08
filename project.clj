@@ -5,7 +5,7 @@
             :url          "http://www.eclipse.org/legal/epl-v10.html"
             :distribution :repo}
   :source-paths ["src/clj"]
-  :plugins [[lein-codox "0.10.4"]]
+  :plugins [[lein-codox "0.10.7"]]
   :dependencies [[io.opentracing/opentracing-api "0.32.0"]
                  [io.opentracing/opentracing-noop "0.32.0"]
                  [io.opentracing/opentracing-util "0.32.0"]
