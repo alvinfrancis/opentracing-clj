@@ -263,4 +263,22 @@
                           (catch Exception e)))]
         @process-1
         @process-2
-        (is (= 1 (count (.finishedSpans *tracer*))))))))
+        (is (= 1 (count (.finishedSpans *tracer*))))))
+
+    (testing "set child-of"
+      (.reset *tracer*)
+      (with-open [outer1 (-> *tracer* (.buildSpan "outer1") (.startActive true))]
+        (with-open [outer2 (-> *tracer* (.buildSpan "outer2") (.startActive true))]
+          (let [ctx (.context (.span outer1))]
+            (testing "using span"
+              (is (= ["child_of" ctx]
+                     (with-span [t {:name     "test"
+                                    :child-of (.span outer1)}]
+                       (let [ref (first (.references t))]
+                         [(.getReferenceType ref) (.getContext ref)])))))
+            (testing "using span context"
+              (is (= ["child_of" ctx]
+                     (with-span [t {:name     "test"
+                                    :child-of (.context (.span outer1))}]
+                       (let [ref (first (.references t))]
+                         [(.getReferenceType ref) (.getContext ref)])))))))))))
