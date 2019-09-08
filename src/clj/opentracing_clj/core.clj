@@ -142,8 +142,8 @@
 (s/def :opentracing.span-data/ignore-active? boolean?)
 (s/def :opentracing.span-data/timestamp :opentracing/microseconds-since-epoch)
 (s/def :opentracing.span-data/child-of (s/nilable
-                                        (s/or :opentracing/span
-                                              :opentracing/span-context)))
+                                        (s/or :span :opentracing/span
+                                              :span-context :opentracing/span-context)))
 (s/def :opentracing.span-data/finish? boolean?)
 
 (s/def :opentracing/span-data
