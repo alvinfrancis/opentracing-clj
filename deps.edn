@@ -1,7 +1,7 @@
-{:deps    {io.opentracing/opentracing-api  {:mvn/version "0.32.0"}
-           io.opentracing/opentracing-noop {:mvn/version "0.32.0"}
-           io.opentracing/opentracing-util {:mvn/version "0.32.0"}
+{:deps    {io.opentracing/opentracing-api  {:mvn/version "0.33.0"}
+           io.opentracing/opentracing-noop {:mvn/version "0.33.0"}
+           io.opentracing/opentracing-util {:mvn/version "0.33.0"}
            ring/ring-core                  {:mvn/version "1.7.1"}}
  :paths   ["src/clj" "resources"]
  :aliases {:test {:extra-paths ["test"]
-                  :extra-deps  {io.opentracing/opentracing-mock "0.32.0"}}}}
+                  :extra-deps  {io.opentracing/opentracing-mock "0.33.0"}}}}
