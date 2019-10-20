@@ -9,25 +9,39 @@
 
 (deftest active-span-test
   (testing "active span"
-    (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-      (is (= (active-span) (.span scope))))
+    (let [span (.. *tracer* (buildSpan "test") (start))]
+      (try
+        (with-open [scope (.. *tracer*
+                              (scopeManager)
+                              (activate span))]
+          (is (= (active-span) span)))
+        (finally
+          (.finish span))))
     (is (nil? (active-span)))))
 
 (deftest context-test
   (testing "context"
-    (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-      (testing "active span"
-        (is (= (context) (.context (.span scope))))
-        (is (= (context (.span scope))
-               (.context (.span scope))))))
+    (let [span (.. *tracer* (buildSpan "test") (start))]
+      (try
+        (with-open [scope (.. *tracer*
+                              (scopeManager)
+                              (activate span))]
+          (testing "active span"
+            (is (= (context) (.context span)))
+            (is (= (context span) (.context span)))))
+        (finally
+          (.finish span))))
     (testing "no active span"
       (is (nil? (context))))))
 
 (deftest finish-test
   (testing "finish"
-    (let [scope-1 (-> *tracer* (.buildSpan "span-1") (.startActive true))
-          scope-2 (-> *tracer* (.buildSpan "span-2") (.startActive true))
-          scope-3 (-> *tracer* (.buildSpan "span-3") (.startActive true))]
+    (let [span-1  (.. *tracer* (buildSpan "span-1") (start))
+          scope-1 (.. *tracer* (scopeManager) (activate span-1))
+          span-2  (.. *tracer* (buildSpan "span-2") (start))
+          scope-2 (.. *tracer* (scopeManager) (activate span-2))
+          span-3  (.. *tracer* (buildSpan "span-3") (start))
+          scope-3 (.. *tracer* (scopeManager) (activate span-3))]
       (testing "active span"
         (do
           (finish)
@@ -36,14 +50,14 @@
             (is (= "span-3" (.operationName (nth spans 0))))))
 
         (do
-          (finish (.span scope-2))
+          (finish span-2)
           (let [spans (.finishedSpans *tracer*)]
             (is (= 2 (count spans)))
             (is (= "span-2" (.operationName (nth spans 1)))))))
 
       (testing "timestamp"
         (.reset *tracer*)
-        (finish (.span scope-1) 10)
+        (finish span-1 10)
         (let [span (first (.finishedSpans *tracer*))]
           (is (= "span-1" (.operationName span)))
           (is (= 10 (.finishMicros span))))))
@@ -54,10 +68,14 @@
 (deftest log-test
   (testing "log"
     (testing "active span"
-      (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-        (log "test")
-        (log {:key "value"})
-        (log (.span scope) 1))
+      (let [span (.. *tracer* (buildSpan "test") (start))]
+        (try
+          (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+            (log "test")
+            (log {:key "value"})
+            (log span 1))
+          (finally
+            (.finish span))))
       (let [span (first (.finishedSpans *tracer*))]
         (is (< 0 (count (.logEntries span))))
         (let [entry (nth (.logEntries span) 0)]
@@ -69,9 +87,12 @@
 
     (testing "with timestamp"
       (.reset *tracer*)
-      (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-        (let [span (.span scope)]
-          (log span :not-string 10)))
+      (let [span (.. *tracer* (buildSpan "test") (start))]
+        (try
+          (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+            (log span :not-string 10))
+          (finally
+            (.finish span))))
       (let [span (first (.finishedSpans *tracer*))]
         (is (< 0 (count (.logEntries span))))
         (let [entry (nth (.logEntries span) 0)]
@@ -82,13 +103,17 @@
 
 (deftest baggage-item-test
   (testing "baggage-item"
-    (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-      (.setBaggageItem (.span scope) "key" "value")
-      (testing "active span"
-        (is (= "value" (baggage-item "key")))
-        (is (= "value" (baggage-item (.span scope) "key")))
-        (is (nil? (baggage-item "unknown")))
-        (is (nil? (baggage-item (.span scope) "unknown")))))
+    (let [span (.. *tracer* (buildSpan "test") (start))]
+      (try
+        (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+          (.setBaggageItem span "key" "value")
+          (testing "active span"
+            (is (= "value" (baggage-item "key")))
+            (is (= "value" (baggage-item span "key")))
+            (is (nil? (baggage-item "unknown")))
+            (is (nil? (baggage-item span "unknown")))))
+        (finally
+          (.finish span))))
 
     (testing "no active span"
       (is (nil? (baggage-item "key"))))))
@@ -96,13 +121,17 @@
 (deftest set-baggage-item-test
   (testing "baggage-item"
     (testing "active span"
-      (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-        (is (= "active" (do (set-baggage-item "active" "active")
-                            (.getBaggageItem (.span scope) "active"))))
-        (is (= "override" (do (set-baggage-item "active" "override")
-                              (.getBaggageItem (.span scope) "active"))))
-        (is (= "passed" (do (set-baggage-item (.span scope) "passed" "passed")
-                            (.getBaggageItem (.span scope) "passed"))))))
+      (let [span (.. *tracer* (buildSpan "test") (start))]
+        (try
+          (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+            (is (= "active" (do (set-baggage-item "active" "active")
+                                (.getBaggageItem span "active"))))
+            (is (= "override" (do (set-baggage-item "active" "override")
+                                  (.getBaggageItem span "active"))))
+            (is (= "passed" (do (set-baggage-item span "passed" "passed")
+                                (.getBaggageItem span "passed")))))
+          (finally
+            (.finish span)))))
 
     (testing "no active span"
       (is (nil? (set-baggage-item "key" "value"))))))
@@ -114,18 +143,34 @@
                         :keyword-key :key-val
                         "number"     1
                         "object"     {:some :map}}]
-        (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-          (set-baggage-items in-baggage)
-          (is (= "string-val"   (.getBaggageItem (.span scope) "string-key")))
-          (is (= ":key-val"     (.getBaggageItem (.span scope) "keyword-key")))
-          (is (= "1"            (.getBaggageItem (.span scope) "number")))
-          (is (= "{:some :map}" (.getBaggageItem (.span scope) "object"))))
-        (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-          (set-baggage-items (.span scope) in-baggage)
-          (is (= "string-val"   (.getBaggageItem (.span scope) "string-key")))
-          (is (= ":key-val"     (.getBaggageItem (.span scope) "keyword-key")))
-          (is (= "1"            (.getBaggageItem (.span scope) "number")))
-          (is (= "{:some :map}" (.getBaggageItem (.span scope) "object"))))))
+        (let [span (.. *tracer*
+                       (buildSpan "test")
+                       (start))]
+          (try
+            (with-open [scope (.. *tracer*
+                                  (scopeManager)
+                                  (activate span))]
+              (set-baggage-items in-baggage)
+              (is (= "string-val"   (.getBaggageItem span "string-key")))
+              (is (= ":key-val"     (.getBaggageItem span "keyword-key")))
+              (is (= "1"            (.getBaggageItem span "number")))
+              (is (= "{:some :map}" (.getBaggageItem span "object"))))
+            (finally
+              (.finish span))))
+        (let [span (.. *tracer*
+                       (buildSpan "test")
+                       (start))]
+          (try
+            (with-open [scope (.. *tracer*
+                                  (scopeManager)
+                                  (activate span))]
+              (set-baggage-items span in-baggage)
+              (is (= "string-val"   (.getBaggageItem span "string-key")))
+              (is (= ":key-val"     (.getBaggageItem span "keyword-key")))
+              (is (= "1"            (.getBaggageItem span "number")))
+              (is (= "{:some :map}" (.getBaggageItem span "object"))))
+            (finally
+              (.finish span))))))
 
     (testing "no active span"
       (is (nil? (set-baggage-items {:key "value"}))))))
@@ -133,11 +178,17 @@
 (deftest set-operation-name-test
   (testing "set-operation-name"
     (testing "active span"
-      (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-        (is (= "active" (do (set-operation-name "active")
-                            (.operationName (.span scope)))))
-        (is (= "passed" (do (set-operation-name (.span scope) "passed")
-                            (.operationName (.span scope)))))))
+      (let [span (.. *tracer*
+                     (buildSpan "test")
+                     (start))]
+        (try
+          (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+            (is (= "active" (do (set-operation-name "active")
+                                (.operationName span))))
+            (is (= "passed" (do (set-operation-name span "passed")
+                                (.operationName span)))))
+          (finally
+            (.finish span)))))
 
     (testing "no active span"
       (is (nil? (set-operation-name "unknown"))))))
@@ -145,21 +196,25 @@
 (deftest set-tag-test
   (testing "set-tag"
     (testing "active span"
-      (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-        (is (= "active" (do (set-tag "key" "active")
-                            (get (.tags (.span scope)) "key"))))
-        (is (= "override" (do (set-tag "key" "active")
-                              (set-tag "key" "override")
-                              (get (.tags (.span scope)) "key"))))
-        (is (= "passed" (do (set-tag "key" "passed")
-                            (get (.tags (.span scope)) "key"))))
-        (is (= true (do (set-tag "boolean" true)
-                        (get (.tags (.span scope)) "boolean"))))
-        (is (= 1 (do (set-tag "number" 1)
-                     (get (.tags (.span scope)) "number"))))
-        (is (= "{:some :map}" (do (set-tag "map" {:some :map})
-                                  (get (.tags (.span scope)) "map"))))
-        (is (thrown? ClassCastException (set-tag :not-string-key "key-val")))))
+      (let [span (.. *tracer* (buildSpan "test") (start))]
+        (try
+          (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+            (is (= "active" (do (set-tag "key" "active")
+                                (get (.tags span) "key"))))
+            (is (= "override" (do (set-tag "key" "active")
+                                  (set-tag "key" "override")
+                                  (get (.tags span) "key"))))
+            (is (= "passed" (do (set-tag "key" "passed")
+                                (get (.tags span) "key"))))
+            (is (= true (do (set-tag "boolean" true)
+                            (get (.tags span) "boolean"))))
+            (is (= 1 (do (set-tag "number" 1)
+                         (get (.tags span) "number"))))
+            (is (= "{:some :map}" (do (set-tag "map" {:some :map})
+                                      (get (.tags span) "map"))))
+            (is (thrown? ClassCastException (set-tag :not-string-key "key-val"))))
+          (finally
+            (.finish span)))))
 
     (testing "no active span"
       (is (nil? (set-tag "unknown" "unknown"))))))
@@ -177,22 +232,34 @@
                       "boolean"     true
                       "number"      1
                       "object"      "{:some :map}"}]
-        (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-          (is (= out-tags (do (set-tags in-tags)
-                              (.tags (.span scope))))))
+        (let [span (.. *tracer* (buildSpan "test") (start))]
+          (try
+            (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+              (is (= out-tags (do (set-tags in-tags)
+                                  (.tags span)))))
+            (finally
+              (.finish span))))
 
-        (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-          (is (= out-tags (do (set-tags (.span scope) in-tags)
-                              (.tags (.span scope))))))
+        (let [span (.. *tracer* (buildSpan "test") (start))]
+          (try
+            (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+              (is (= out-tags (do (set-tags span in-tags)
+                                  (.tags span)))))
+            (finally
+              (.finish span))))
 
-        (with-open [scope (-> *tracer* (.buildSpan "test") (.startActive true))]
-          (is (= {} (do (set-tags nil)
-                        (.tags (.span scope)))))
-          (is (= {"a" "base" "b" "override" "c" "new"}
-                 (do (set-tags {:a "base" :b "base"})
-                     (set-tags {:a "base" :b "override"})
-                     (set-tags {:c "new"})
-                     (.tags (.span scope))))))))
+        (let [span (.. *tracer* (buildSpan "test") (start))]
+          (try
+            (with-open [scope (.. *tracer* (scopeManager) (activate span))]
+              (is (= {} (do (set-tags nil)
+                            (.tags span))))
+              (is (= {"a" "base" "b" "override" "c" "new"}
+                     (do (set-tags {:a "base" :b "base"})
+                         (set-tags {:a "base" :b "override"})
+                         (set-tags {:c "new"})
+                         (.tags span)))))
+            (finally
+              (.finish span))))))
 
     (testing "no active span"
       (is (nil? (set-tags {:key "value"}))))))
@@ -267,18 +334,26 @@
 
     (testing "set child-of"
       (.reset *tracer*)
-      (with-open [outer1 (-> *tracer* (.buildSpan "outer1") (.startActive true))]
-        (with-open [outer2 (-> *tracer* (.buildSpan "outer2") (.startActive true))]
-          (let [ctx (.context (.span outer1))]
-            (testing "using span"
-              (is (= ["child_of" ctx]
-                     (with-span [t {:name     "test"
-                                    :child-of (.span outer1)}]
-                       (let [ref (first (.references t))]
-                         [(.getReferenceType ref) (.getContext ref)])))))
-            (testing "using span context"
-              (is (= ["child_of" ctx]
-                     (with-span [t {:name     "test"
-                                    :child-of (.context (.span outer1))}]
-                       (let [ref (first (.references t))]
-                         [(.getReferenceType ref) (.getContext ref)])))))))))))
+      (let [outer-span-1 (.. *tracer* (buildSpan "outer-scope-1") (start))]
+        (try
+          (with-open [outer-scope-1 (.. *tracer* (scopeManager) (activate outer-span-1))]
+            (let [outer-span-2 (.. *tracer* (buildSpan "outer-scope-2") (start))]
+              (try
+                (with-open [outer-scope-2 (.. *tracer* (scopeManager) (activate outer-span-2))]
+                  (let [ctx (.context outer-span-1)]
+                    (testing "using span"
+                      (is (= ["child_of" ctx]
+                             (with-span [t {:name     "test"
+                                            :child-of outer-span-1}]
+                               (let [ref (first (.references t))]
+                                 [(.getReferenceType ref) (.getContext ref)])))))
+                    (testing "using span context"
+                      (is (= ["child_of" ctx]
+                             (with-span [t {:name     "test"
+                                            :child-of (.context outer-span-1)}]
+                               (let [ref (first (.references t))]
+                                 [(.getReferenceType ref) (.getContext ref)])))))))
+                (finally
+                  (.finish outer-span-2)))))
+          (finally
+            (.finish outer-span-1)))))))
