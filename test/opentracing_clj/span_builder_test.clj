@@ -175,6 +175,17 @@
         (finally
           (.finish span))))))
 
+(deftest start-test
+  (testing "start"
+    (is (= 1 (let [span (-> *tracer*
+                            (.buildSpan "test")
+                            (start))]
+               (try
+                 (with-open [scope (.. *tracer* (scopeManager) (activate span))])
+                 (finally
+                   (.finish span)))
+                 (count (.finishedSpans *tracer*)))))))
+
 (deftest build-span-test
   (testing "build-span"
     (let [op-name "test"]
