@@ -283,6 +283,13 @@
         (is (= (walk/stringify-keys span-tags)
                (.tags (first (.finishedSpans *tracer*)))))))
 
+    (testing "set timestamp"
+      (.reset *tracer*)
+      (let [span-name    "test-1"
+            start-micros 10000000]
+        (with-span [s {:name            span-name
+                       :start-timestamp start-micros}]
+          (is (= start-micros (.startMicros s))))))
 
     (testing "existing span"
       (.reset *tracer*)
@@ -299,6 +306,16 @@
         @process-2
         (is (= 1 (count (.finishedSpans *tracer*))))))
 
+    (testing "failed spec"
+      (.reset *tracer*)
+      (is (thrown? Exception (with-span [s {:unrecognized-keyword "test"}])))
+      (try
+        (with-span [s {:unrecognized-keyword "test"}])
+        (catch Exception e
+          (let [error (Throwable->map e)]
+            (is (= "with-span binding failed to conform to :opentracing/span-init"
+                   (:cause error)))))))
+
     (testing "ambiguous spec"
       (.reset *tracer*)
       (let [existing (-> *tracer* (.buildSpan "test") (.start))
@@ -312,6 +329,13 @@
                        )]
         @process
         (is (= 1 (count (.finishedSpans *tracer*))))))
+
+    (testing "ignores active"
+      (.reset *tracer*)
+      (with-span [outer {:name "outer"}]
+        (is (= 0 (with-span [inner {:name           "inner"
+                                    :ignore-active? true}]
+                   (count (.references inner)))))))
 
     (testing "exception in span"
       (.reset *tracer*)
