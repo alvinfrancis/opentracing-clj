@@ -5,7 +5,7 @@
    [opentracing-clj.span-builder :refer :all]
    [opentracing-clj.test-utils :as utils])
   (:import
-   [io.opentracing Tracer$SpanBuilder]
+   [io.opentracing References Tracer$SpanBuilder]
    [io.opentracing.mock MockTracer]))
 
 (use-fixtures :each utils/with-mock-tracer)
@@ -133,7 +133,7 @@
                               (scopeManager)
                               (activate outer-span))]
           (let [ctx (.context outer-span)]
-            (is (= ["child_of" ctx]
+            (is (= [References/CHILD_OF ctx]
                    (let [sb   (.. *tracer* (buildSpan "test"))
                          _    (child-of sb outer-span)
                          span (.start sb)]
@@ -146,7 +146,7 @@
                        (finally
                          (.finish span))))))
 
-            (is (= ["child_of" ctx]
+            (is (= [References/CHILD_OF ctx]
                    (let [sb   (.. *tracer* (buildSpan "test"))
                          _    (child-of sb ctx)
                          span (.start sb)]

@@ -3,7 +3,8 @@
             [clojure.walk :as walk]
             [opentracing-clj.core :refer :all]
             [opentracing-clj.test-utils :as utils])
-  (:import [io.opentracing.mock MockSpan MockTracer]))
+  (:import [io.opentracing References]
+           [io.opentracing.mock MockSpan MockTracer]))
 
 (use-fixtures :each utils/with-mock-tracer)
 
@@ -366,13 +367,13 @@
                 (with-open [outer-scope-2 (.. *tracer* (scopeManager) (activate outer-span-2))]
                   (let [ctx (.context outer-span-1)]
                     (testing "using span"
-                      (is (= ["child_of" ctx]
+                      (is (= [References/CHILD_OF ctx]
                              (with-span [t {:name     "test"
                                             :child-of outer-span-1}]
                                (let [ref (first (.references t))]
                                  [(.getReferenceType ref) (.getContext ref)])))))
                     (testing "using span context"
-                      (is (= ["child_of" ctx]
+                      (is (= [References/CHILD_OF ctx]
                              (with-span [t {:name     "test"
                                             :child-of (.context outer-span-1)}]
                                (let [ref (first (.references t))]
