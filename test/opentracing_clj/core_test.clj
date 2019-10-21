@@ -367,8 +367,15 @@
         @process-2
         (is (= 1 (count (.finishedSpans *tracer*))))))
 
-    (testing "set child-of"
+    (testing "set CHILD_OF reference"
       (.reset *tracer*)
+      (testing "implicitly"
+        (with-span [outer {:name "outer"}]
+          (is (= [References/CHILD_OF (.context outer)]
+                 (with-span [inner {:name "inner"}]
+                   (let [ref (first (.references inner))]
+                     [(.getReferenceType ref) (.getContext ref)]))))))
+
       (let [outer-span-1 (.. *tracer* (buildSpan "outer-scope-1") (start))]
         (try
           (with-open [outer-scope-1 (.. *tracer* (scopeManager) (activate outer-span-1))]
