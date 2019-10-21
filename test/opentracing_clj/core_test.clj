@@ -72,32 +72,42 @@
       (let [span (.. *tracer* (buildSpan "test") (start))]
         (try
           (with-open [scope (.. *tracer* (scopeManager) (activate span))]
-            (log "test")
-            (log {:key "value"})
-            (log span 1))
+            (log "string-value")
+            (log :non-string-value)
+            (log {:keyword-key :non-string-value
+                  "string-key" "string-value"})
+            (log span "explicit set span"))
           (finally
             (.finish span))))
-      (let [span (first (.finishedSpans *tracer*))]
-        (is (< 0 (count (.logEntries span))))
-        (let [entry (nth (.logEntries span) 0)]
-          (is (= "test" (get (.fields entry) "event"))))
-        (let [entry (nth (.logEntries span) 1)]
-          (is (= "value" (get (.fields entry) "key"))))
-        (let [entry (nth (.logEntries span) 2)]
-          (is (= "1" (get (.fields entry) "event"))))))
+
+      (let [span (first (.finishedSpans *tracer*))
+            logs (.logEntries span)]
+        (is (= 4 (count logs)))
+        (is (= "string-value"      (-> logs (nth 0) (.fields) (get "event"))))
+        (is (= ":non-string-value" (-> logs (nth 1) (.fields) (get "event"))))
+        (is (= :non-string-value   (-> logs (nth 2) (.fields) (get "keyword-key"))))
+        (is (= "string-value"      (-> logs (nth 2) (.fields) (get "string-key"))))
+        (is (= "explicit set span" (-> logs (nth 3) (.fields) (get "event"))))))
 
     (testing "with timestamp"
       (.reset *tracer*)
       (let [span (.. *tracer* (buildSpan "test") (start))]
         (try
           (with-open [scope (.. *tracer* (scopeManager) (activate span))]
-            (log span :not-string 10))
+            (log span "string-value" 10)
+            (log span :non-string-value 10)
+            (log span {:keyword-key :non-string-value
+                       "string-key" "string-value"} 10))
           (finally
             (.finish span))))
-      (let [span (first (.finishedSpans *tracer*))]
-        (is (< 0 (count (.logEntries span))))
-        (let [entry (nth (.logEntries span) 0)]
-          (is (= ":not-string" (get (.fields entry) "event"))))))
+
+      (let [span (first (.finishedSpans *tracer*))
+            logs (.logEntries span)]
+        (is (< 0 (count logs)))
+        (is (= "string-value"      (-> logs (nth 0) (.fields) (get "event"))))
+        (is (= ":non-string-value" (-> logs (nth 1) (.fields) (get "event"))))
+        (is (= :non-string-value   (-> logs (nth 2) (.fields) (get "keyword-key"))))
+        (is (= "string-value"      (-> logs (nth 2) (.fields) (get "string-key"))))))
 
     (testing "no active span"
       (is (nil? (log "test"))))))
