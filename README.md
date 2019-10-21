@@ -137,6 +137,22 @@ paths can cause a span to be finished.
     ...))
 ```
 
+### Exceptions
+
+Since `with-span` will finish a span unless configured otherwise, any
+additional data one wishes to add to the span relating to the exception
+should be done within the macro.  The span will still be finished at
+the end of the scope of `with-span`.
+
+``` clojure
+(tracing/with-span [s {:name "test"}]
+  (try
+    (throw (ex-info "test" nil))
+    (catch Exception e
+      (log "exception")
+      (set-tags {:event "error"}))))
+```
+
 ### Ring Middleware
 
 Middleware for instrumenting Ring request/responses is provided.
