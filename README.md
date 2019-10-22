@@ -149,8 +149,8 @@ the end of the scope of `with-span`.
   (try
     (throw (ex-info "test" nil))
     (catch Exception e
-      (log "exception")
-      (set-tags {:event "error"}))))
+      (tracing/log "exception")
+      (tracing/set-tags {:event "error"}))))
 ```
 
 ### Ring Middleware
