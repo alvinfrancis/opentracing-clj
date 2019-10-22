@@ -181,7 +181,7 @@
       (sb/with-start-timestamp builder start-ts#))
     (when-let [parent# (:child-of span-data)]
       (sb/child-of builder parent#))
-    (.start builder)))
+    (sb/start builder)))
 
 (s/fdef build-new-span
   :args (s/cat :span-data :opentracing/span-data)
@@ -220,7 +220,7 @@
            ~@body)
          (finally
            (when (:finish? m# true)
-             (.finish ~s)))))))
+             (finish ~s)))))))
 
 (s/fdef with-span
   :args (s/cat :binding :opentracing/span-binding
