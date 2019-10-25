@@ -13,7 +13,7 @@
   :codox {:output-path "codox"
           :metadata    {:doc/format :markdown}
           :source-uri  "https://github.com/alvinfrancis/opentracing-clj/blob/v{version}/{filepath}#L{line}"}
-  :deploy-repositories [["snapshots" {:url "https://clojars.org/repo"
+  :deploy-repositories [["snapshots" {:url      "https://clojars.org/repo"
                                       :username [:env/clojars_username :gpg]
                                       :password [:env/clojars_password :gpg]}]
                         ["releases"  {:url           "https://clojars.org/repo"
@@ -21,5 +21,5 @@
                                       :password      [:env/clojars_password :gpg]
                                       :sign-releases false}]]
   :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.0"]]}
-             :test {:dependencies [[io.opentracing/opentracing-mock "0.33.0"]
-                                   [ring/ring-mock "0.3.2"]]}})
+             :test     {:dependencies [[io.opentracing/opentracing-mock "0.33.0"]
+                                       [ring/ring-mock "0.3.2"]]}})
