@@ -12,7 +12,7 @@ Add the following dependency to your project or build file:
 
 ## Requirements
 
-Supports Opentracing 0.32.0 and onward.
+Supports Opentracing 0.33.0 and onward.
 
 ## Documentation
 
