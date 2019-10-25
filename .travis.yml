@@ -6,12 +6,12 @@ after_success:
   - lein codox
 deploy:
   - provider: script
-    cleanup: false
+    skip_cleanup: true
     script: lein deploy
     on:
       branch: master
   - provider: pages
-    cleanup: false
+    skip_cleanup: true
     keep_history: true
     token: $GITHUB_TOKEN
     local_dir: codox
