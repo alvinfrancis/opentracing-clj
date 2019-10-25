@@ -38,6 +38,11 @@
   `(when-let [~sym (active-span)]
      ~@body))
 
+(defn activate
+  "Activates a span."
+  [^Span span]
+  (.activate (scope-manager) span))
+
 (defn context
   "Returns the associated SpanContext of a span."
   ([]
