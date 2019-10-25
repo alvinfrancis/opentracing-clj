@@ -2,7 +2,7 @@ language: clojure
 branches:
   except:
     - gh-pages
-before_deploy:
+after_success:
   - lein codox
 deploy:
   - provider: script
