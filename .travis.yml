@@ -13,7 +13,7 @@ deploy:
   - provider: pages
     skip_cleanup: true
     keep_history: true
-    token: $GITHUB_TOKEN
+    github_token: $GITHUB_TOKEN
     local_dir: codox
     on:
       branch: master
