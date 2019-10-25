@@ -15,6 +15,13 @@
   Defaults to the value returned by GlobalTracer.get()."
   (GlobalTracer/get))
 
+(defn scope-manager
+  "Returns the ScopeManager of the tracer."
+  ([]
+   (.scopeManager *tracer*))
+  ([tracer]
+   (.scopeManager tracer)))
+
 ;; Span
 ;; ----
 
@@ -22,7 +29,7 @@
   "Returns the current active span."
   []
   (when *tracer*
-    (.activeSpan (.scopeManager *tracer*))))
+    (.activeSpan (scope-manager))))
 
 (defmacro with-active-span
   "Convenience macro for setting sym to the current active span.  Will
