@@ -8,6 +8,11 @@
 
 (use-fixtures :each utils/with-mock-tracer)
 
+(deftest scope-manager-test
+  (testing "scope manager"
+    (is (= (.scopeManager *tracer*) (scope-manager *tracer*)))
+    (is (= (.scopeManager *tracer*) (scope-manager)))))
+
 (deftest active-span-test
   (testing "active span"
     (let [span (.. *tracer* (buildSpan "test") (start))]
@@ -19,6 +24,12 @@
         (finally
           (.finish span))))
     (is (nil? (active-span)))))
+
+(deftest activate-test
+  (testing "activate"
+    (let [span (.. *tracer* (buildSpan "test") (start))]
+      (activate span)
+      (is (= span (.. *tracer* (scopeManager) (activeSpan)))))))
 
 (deftest context-test
   (testing "context"
