@@ -3,7 +3,7 @@
   (:require [opentracing-clj.core :as tracing])
   (:import (io.opentracing SpanContext)
            (io.opentracing.propagation Format$Builtin
-                                       TextMapExtractAdapter
+                                       TextMapAdapter
                                        TextMapInjectAdapter)))
 
 (def formats {:http Format$Builtin/HTTP_HEADERS
@@ -30,5 +30,5 @@
   [^java.util.Map carrier format]
   (when-let [t tracing/*tracer*]
     (let [hm (java.util.HashMap. carrier)
-          tm (TextMapExtractAdapter. hm)]
+          tm (TextMapAdapter. hm)]
       (.extract t (get formats format) tm))))
