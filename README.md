@@ -195,7 +195,7 @@ map and HTTP header carrier formats.
 (require '[opentracing-clj.propagation :as propagation])
 
 (tracing/with-span [s {:name "test"}]
-  (let [headers (propagation/inject :http)] ; is equivalent to (propagation/inject s :http)
+  (let [headers (propagation/inject :http)] ; is equivalent to (propagation/inject (tracing/context s) :http)
     ... ; headers will be a map of the span context for use when making an HTTP call
     ))
 
