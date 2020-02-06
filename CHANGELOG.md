@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+### Fixed
+- Fixed TextMap inject/extract split (opentracing v0.32.0) breaking propagation.
 
 ## [0.2.0] - 2019-10-26
 ### Added
