@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.2.1] - 2020-02-09
 ### Fixed
 - Fixed TextMap inject/extract split (opentracing v0.32.0) breaking propagation.
 
@@ -48,7 +50,8 @@ All notable changes to this project will be documented in this file. This change
 - Middleware for instrumenting Ring.
 - Functions for handling span context propagation.
 
-[Unreleased]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.1...HEAD
+[0.2.0]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.0...0.2.1
 [0.2.0]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.5...0.2.0
 [0.1.5]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.4...0.1.5
 [0.1.4]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.3...v0.1.4
