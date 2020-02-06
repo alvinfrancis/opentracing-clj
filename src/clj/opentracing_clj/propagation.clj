@@ -3,8 +3,7 @@
   (:require [opentracing-clj.core :as tracing])
   (:import (io.opentracing SpanContext)
            (io.opentracing.propagation Format$Builtin
-                                       TextMapAdapter
-                                       TextMapInjectAdapter)))
+                                       TextMapAdapter)))
 
 (def formats {:http Format$Builtin/HTTP_HEADERS
               :text Format$Builtin/TEXT_MAP})
@@ -20,7 +19,7 @@
   ([^SpanContext ctx format]
    (when-let [t tracing/*tracer*]
      (let [hm (java.util.HashMap.)
-           tm (TextMapInjectAdapter. hm)]
+           tm (TextMapAdapter. hm)]
        (.inject t ctx (get formats format) tm)
        (into {} hm)))))
 
