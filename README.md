@@ -199,12 +199,13 @@ map and HTTP header carrier formats.
     ... ; headers will be a map of the span context for use when making an HTTP call
     ))
 
-(let [response (http-ring-response) ; assuming this is an HTTP call returning a ring spec response
-      ctx      (propagation/extract (:headers request) :http)]
-  (tracing/with-span [s {:name     "child-of-propagation"
-                         :child-of ctx}]
-    ... ; this span will be recorded as a child of the span context propagated through the HTTP call
-    ))
+(defn ring-handler
+  [request]
+  (let [ctx (propagation/extract (:headers request) :http)] ; extract span context from request headers
+    (tracing/with-span [s {:name     "child-of-propagation"
+                           :child-of ctx}]
+      ... ; this span will be recorded as a child of the span context propagated through the HTTP call to this handler
+      )))
 ```
 
 ### Tracer
