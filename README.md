@@ -153,6 +153,28 @@ the end of the scope of `with-span`.
       (tracing/set-tags {:event "error"}))))
 ```
 
+### Propagation
+
+Support is currently available for span context propagation using text
+map and HTTP header carrier formats.
+
+``` clojure
+(require '[opentracing-clj.propagation :as propagation])
+
+(tracing/with-span [s {:name "test"}]
+  (let [headers (propagation/inject :http)] ; is equivalent to (propagation/inject (tracing/context s) :http)
+    ... ; headers will be a map of the span context for use when making an HTTP call
+    ))
+
+(defn ring-handler
+  [request]
+  (let [ctx (propagation/extract (:headers request) :http)] ; extract span context from request headers
+    (tracing/with-span [s {:name     "child-of-propagation"
+                           :child-of ctx}]
+      ... ; this span will be recorded as a child of the span context propagated through the HTTP call to this handler
+      )))
+```
+
 ### Ring Middleware
 
 Middleware for instrumenting Ring request/responses is provided.
@@ -184,28 +206,6 @@ own functions for providing both.
   {:http.date (-> ring-response :headers (get "Date"))})
 
 (def app (-> handler (tracing.ring/wrap-opentracing operation-name request-tags response-tags)))
-```
-
-### Propagation
-
-Support is currently available for span context propagation using text
-map and HTTP header carrier formats.
-
-``` clojure
-(require '[opentracing-clj.propagation :as propagation])
-
-(tracing/with-span [s {:name "test"}]
-  (let [headers (propagation/inject :http)] ; is equivalent to (propagation/inject (tracing/context s) :http)
-    ... ; headers will be a map of the span context for use when making an HTTP call
-    ))
-
-(defn ring-handler
-  [request]
-  (let [ctx (propagation/extract (:headers request) :http)] ; extract span context from request headers
-    (tracing/with-span [s {:name     "child-of-propagation"
-                           :child-of ctx}]
-      ... ; this span will be recorded as a child of the span context propagated through the HTTP call to this handler
-      )))
 ```
 
 ### Tracer
