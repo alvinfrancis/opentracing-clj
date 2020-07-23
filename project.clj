@@ -9,7 +9,7 @@
   :dependencies [[io.opentracing/opentracing-api "0.33.0"]
                  [io.opentracing/opentracing-noop "0.33.0"]
                  [io.opentracing/opentracing-util "0.33.0"]
-                 [ring/ring-core "1.7.1"]]
+                 [ring/ring-core "1.8.1"]]
   :codox {:output-path "codox"
           :metadata    {:doc/format :markdown}
           :source-uri  "https://github.com/alvinfrancis/opentracing-clj/blob/v{version}/{filepath}#L{line}"}
@@ -20,6 +20,6 @@
                                       :username      [:env/clojars_username :gpg]
                                       :password      [:env/clojars_password :gpg]
                                       :sign-releases false}]]
-  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.0"]]}
+  :profiles {:provided {:dependencies [[org.clojure/clojure "1.10.1"]]}
              :test     {:dependencies [[io.opentracing/opentracing-mock "0.33.0"]
-                                       [ring/ring-mock "0.3.2"]]}})
+                                       [ring/ring-mock "0.4.0"]]}})
