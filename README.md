@@ -220,7 +220,7 @@ opentracing-clj exposes the underlying tracer via a dynamic var.
 ;; The following sets the tracer to the value return by TracerResolver.
 
 (import '[io.opentracing.contrib.tracerresolver TracerResolver])
-(alter-var-root #'tracing/*tracer* (TracerResolver/resolveTracer))
+(alter-var-root #'tracing/*tracer* (constantly (TracerResolver/resolveTracer)))
 
 ;; The tracer instance can also be set for a particular scope by using binding
 
