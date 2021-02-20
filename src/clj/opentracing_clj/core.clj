@@ -5,7 +5,7 @@
    [clojure.walk :as walk]
    [opentracing-clj.span-builder :as sb]
    [ring.util.request])
-  (:import (io.opentracing Span SpanContext Tracer Scope)
+  (:import (io.opentracing Span SpanContext Tracer Scope ScopeManager)
            (io.opentracing.tag Tag)
            (io.opentracing.util GlobalTracer)))
 
@@ -17,9 +17,9 @@
 
 (defn scope-manager
   "Returns the ScopeManager of the tracer."
-  ([]
+  (^ScopeManager []
    (.scopeManager *tracer*))
-  ([^Tracer tracer]
+  (^ScopeManager [^Tracer tracer]
    (.scopeManager tracer)))
 
 ;; Span
