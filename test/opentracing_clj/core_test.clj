@@ -260,7 +260,6 @@
                       Tags/ERROR            true
                       Tags/DB_TYPE          "postgres"
                       Tags/SPAN_KIND         Tags/SPAN_KIND_CLIENT
-                      "tag-key-string-value" Tags/SPAN_KIND_CLIENT
                       "boolean"              true
                       "number"               1
                       "object"               {:some :map}}

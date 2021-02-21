@@ -131,7 +131,6 @@
    (cond
      (instance? Boolean value) (.setTag span ^String (resolve-tag-key key) ^Boolean value)
      (instance? Number value)  (.setTag span ^String (resolve-tag-key key) ^Number value)
-     (instance? Tag value)     (.setTag span ^String (resolve-tag-key key) ^String (.getKey ^Tag value))
      :else                     (.setTag span ^String (resolve-tag-key key) ^String (str value)))))
 
 (defn set-tags
