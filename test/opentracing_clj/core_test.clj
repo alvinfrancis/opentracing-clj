@@ -268,7 +268,6 @@
                       "error"                true
                       "db.type"              "postgres"
                       "span.kind"            "client"
-                      "tag-key-string-value" "client"
                       "boolean"               true
                       "number"                1
                       "object"                "{:some :map}"}]
