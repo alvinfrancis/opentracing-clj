@@ -1,4 +1,4 @@
-(defproject opentracing-clj "0.2.2-SNAPSHOT"
+(defproject opentracing-clj "0.2.2"
   :description "Opentracing API support for Clojure built on top of opentracing-java."
   :url "https://github.com/alvinfrancis/opentracing-clj"
   :license {:name         "Eclipse Public License"

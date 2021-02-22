@@ -7,7 +7,7 @@ Opentracing API support for Clojure built on top of
 Add the following dependency to your project or build file:
 
 ```
-[opentracing-clj "0.2.1"]
+[opentracing-clj "0.2.2"]
 ```
 
 ## Requirements

@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
+
+## [0.2.2] - 2021-02-22
 ### Added
 - Add clj-kondo config to classpath for export.
 - Add support for using io.opentracing.tag in `set-tags`.
@@ -54,7 +56,8 @@ All notable changes to this project will be documented in this file. This change
 - Middleware for instrumenting Ring.
 - Functions for handling span context propagation.
 
-[Unreleased]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/alvinfrancis/opentracing-clj/compare/v0.1.4...v0.1.5
