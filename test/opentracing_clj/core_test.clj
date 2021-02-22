@@ -4,6 +4,7 @@
             [opentracing-clj.core :refer :all]
             [opentracing-clj.test-utils :as utils])
   (:import [io.opentracing References]
+           [io.opentracing.tag Tags]
            [io.opentracing.mock MockSpan MockTracer]))
 
 (use-fixtures :each utils/with-mock-tracer)
@@ -228,13 +229,23 @@
                                   (get (.tags span) "key"))))
             (is (= "passed" (do (set-tag "key" "passed")
                                 (get (.tags span) "key"))))
+            (is (= "passed" (do (set-tag :key "passed")
+                                (get (.tags span) "key"))))
+            (is (= "passed" (do (set-tag :namespaced.key "passed")
+                                (get (.tags span) "namespaced.key"))))
             (is (= true (do (set-tag "boolean" true)
                             (get (.tags span) "boolean"))))
             (is (= 1 (do (set-tag "number" 1)
                          (get (.tags span) "number"))))
+            (is (= true (do (set-tag Tags/ERROR true)
+                            (get (.tags span) "error"))))
+            (is (= "client" (do (set-tag Tags/SPAN_KIND Tags/SPAN_KIND_CLIENT)
+                                (get (.tags span) "span.kind"))))
+            (is (= "client" (do (set-tag "span.kind" Tags/SPAN_KIND_CLIENT)
+                                (get (.tags span) "span.kind"))))
             (is (= "{:some :map}" (do (set-tag "map" {:some :map})
                                       (get (.tags span) "map"))))
-            (is (thrown? ClassCastException (set-tag :not-string-key "key-val"))))
+            (is (thrown? ClassCastException (set-tag 123 "key-val"))))
           (finally
             (.finish span)))))
 
@@ -244,16 +255,23 @@
 (deftest set-tags-test
   (testing "set-tags"
     (testing "active span"
-      (let [in-tags  {"string-key" "string-val"
-                      :keyword-key :key-val
-                      "boolean"    true
-                      "number"     1
-                      "object"     {:some :map}}
-            out-tags {"string-key"  "string-val"
-                      "keyword-key" ":key-val"
-                      "boolean"     true
-                      "number"      1
-                      "object"      "{:some :map}"}]
+      (let [in-tags  {"string-key"          "string-val"
+                      :keyword-key          :key-val
+                      Tags/ERROR            true
+                      Tags/DB_TYPE          "postgres"
+                      Tags/SPAN_KIND         Tags/SPAN_KIND_CLIENT
+                      "boolean"              true
+                      "number"               1
+                      "object"               {:some :map}}
+            out-tags {"string-key"           "string-val"
+                      "keyword-key"          ":key-val"
+                      "error"                true
+                      "db.type"              "postgres"
+                      "span.kind"            "client"
+                      "tag-key-string-value" "client"
+                      "boolean"               true
+                      "number"                1
+                      "object"                "{:some :map}"}]
         (let [span (.. *tracer* (buildSpan "test") (start))]
           (try
             (with-open [scope (.. *tracer* (scopeManager) (activate span))]
@@ -347,8 +365,7 @@
                        ;; should choose to use the existing span spec
                        (with-span [t {:name "new"
                                       :from existing}]
-                         (is (= existing (.activeSpan *tracer*))))
-                       )]
+                         (is (= existing (.activeSpan *tracer*)))))]
         @process
         (is (= 1 (count (.finishedSpans *tracer*))))))
 

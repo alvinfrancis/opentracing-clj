@@ -2,11 +2,11 @@
   "Functions for creating and manipulating spans for opentracing."
   (:require
    [clojure.spec.alpha :as s]
-   [clojure.string :as string]
    [clojure.walk :as walk]
    [opentracing-clj.span-builder :as sb]
    [ring.util.request])
-  (:import (io.opentracing Span SpanContext Tracer Scope)
+  (:import (io.opentracing Span SpanContext Tracer Scope ScopeManager)
+           (io.opentracing.tag Tag)
            (io.opentracing.util GlobalTracer)))
 
 (def ^:dynamic ^Tracer *tracer*
@@ -17,9 +17,9 @@
 
 (defn scope-manager
   "Returns the ScopeManager of the tracer."
-  ([]
+  (^ScopeManager []
    (.scopeManager *tracer*))
-  ([tracer]
+  (^ScopeManager [^Tracer tracer]
    (.scopeManager tracer)))
 
 ;; Span
@@ -117,16 +117,21 @@
   ([^Span span ^String name]
    (.setOperationName span name)))
 
+(defn- resolve-tag-key ^String [key]
+  (cond (keyword? key) (name key)
+        (instance? Tag key) (.getKey ^Tag key)
+        :else ^String key))
+
 (defn set-tag
   "Sets a key/value tag on the Span."
-  ([^String key value]
+  ([key value]
    (with-active-span s
      (set-tag s key value)))
-  ([^Span span ^String key value]
+  ([^Span span key value]
    (cond
-     (instance? Boolean value) (.setTag span key ^Boolean value)
-     (instance? Number value)  (.setTag span key ^Number value)
-     :else                     (.setTag span key ^String (str value)))))
+     (instance? Boolean value) (.setTag span ^String (resolve-tag-key key) ^Boolean value)
+     (instance? Number value)  (.setTag span ^String (resolve-tag-key key) ^Number value)
+     :else                     (.setTag span ^String (resolve-tag-key key) ^String (str value)))))
 
 (defn set-tags
   "Sets/adds tags on the Span using key/value pairs of a map.
@@ -138,9 +143,7 @@
   ([^Span s m]
    (when (map? m)
      (doseq [[k v] m]
-       (set-tag s
-                (if (keyword? k) (name k) (str k))
-                v)))
+       (set-tag s k v)))
    s))
 
 ;; with-span
