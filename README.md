@@ -16,7 +16,7 @@ Supports Opentracing 0.33.0 and onward.
 
 ## Documentation
 
-- [API Docs](http://alvinfrancis.github.com/opentracing-clj)
+- [API Docs](http://alvinfrancis.github.io/opentracing-clj)
 
 ## Required Reading
 
